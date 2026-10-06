@@ -60,8 +60,10 @@ Grammar notes cost one small extra request per word, and only when you ask for t
 
 ## Install
 
-1. Build it: `npm ci && npm run build`.
-2. In Chrome or Edge, open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked**, and choose `.output/chrome-mv3`.
+1. Install dependencies with `npm ci`, then build for your browser:
+   - **Chrome or Edge:** `npm run build`, open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked**, and choose `.output/chrome-mv3`.
+   - **Firefox (or Firefox-based browsers like Zen):** `npm run build:firefox`, open `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on…**, and choose `.output/firefox-mv2/manifest.json`. Temporary add-ons are removed when the browser quits, and their stored data may go with them. To install permanently, sign it as an unlisted (self-distributed) add-on with your addons.mozilla.org API key: `npx web-ext sign -s .output/firefox-mv2 --channel=unlisted --api-key=… --api-secret=…`, then open the signed `.xpi`.
+2. The shortcut to translate the page is Alt+Z, or Control+Shift+Z on macOS.
 3. Open the extension's options. Under **Translation Service**, add an API configuration:
    - **OpenAI**, or any OpenAI-compatible endpoint (for example OpenRouter, or a local Ollama server at `http://localhost:11434/v1/chat/completions`).
    - **Anthropic (Claude)** through its OpenAI-compatible endpoint, defaulting to `claude-haiku-4-5-20251001`. This preset matches Anthropic's documented compatibility API but has not been tested here.
