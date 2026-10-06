@@ -44,6 +44,26 @@ _Avoid_: useBackgroundProxy toggle, direct API calls from content scripts
 A translation mode that replaces or inserts target-language words in the page text at a set ratio. It keeps the page structure and uses words or phrases as the smallest learning unit.
 _Avoid_: full translation, paragraph translation
 
+**Sentence translation**:
+A translation mode that replaces whole sentences in place, but only sentences the learner can read: at most a set number of unknown words and only unlocked grammar. The model analyses each sentence once (translation, per-word lemma, gloss, CEFR estimate, grammar tags); selection against the learner's vocabulary happens in code, so cached analyses stay valid as the learner improves.
+_Avoid_: sentence-level paragraph mode, full translation
+
+**Sentence analysis**:
+The model's level-independent output for one sentence: the translation, its tokens and its grammar tags. It is cached by prompt version, model, language pair and sentence text, and must never encode the learner's level.
+_Avoid_: selected sentence, model decision
+
+**Known words**:
+The learner's per-lemma record for a target language: status (seen, unknown, learning, known), exposures, lookups and when it was last seen. Exposures come from reading a replaced sentence unaided; lookups and reveals reset them.
+_Avoid_: vocabulary list, word bank
+
+**Cold-start level**:
+The CEFR level at or below which lemmas the learner has never judged are assumed known. It only applies until the learner's own record exists with a judgement.
+_Avoid_: user level (that is word mode's selection hint)
+
+**Unlocked grammar**:
+The grammar features, from a fixed tag set, the learner can handle. A sentence is only shown when all of its tags are unlocked.
+_Avoid_: difficulty, grammar level
+
 **Paragraph translation**:
 A translation mode that adds a translation for each paragraph. It does not replace text inline; each paragraph gets a separate translation.
 _Avoid_: word translation, word-by-word replacement

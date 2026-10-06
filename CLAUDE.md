@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**illa-helper** is a browser extension for immersive language learning based on the "i+1" comprehensible input theory. It intelligently replaces words on web pages with translations based on user proficiency level, creating a natural language learning environment while browsing.
+**illa-helper** is a browser extension for immersive language learning based on the "i+1" comprehensible input theory. It has three translation modes: word mode replaces selected words, sentence mode replaces whole sentences the learner can read (selected in code from a cached LLM analysis against their known words and unlocked grammar), and paragraph mode adds a translation under each paragraph. This fork defaults to English → Swedish and has no Chinese UI or China-specific services.
 
 Built with WXT (WebExtension Toolkit) + Vue 3 + TypeScript + Vite. Supports Chrome, Edge, Firefox.
 
@@ -24,13 +24,17 @@ npm run lint:fix         # ESLint auto-fix
 npm run format           # Prettier format
 npm run check            # format + lint:fix combined
 npm run compile          # TypeScript type check (vue-tsc --noEmit)
+npm test                 # Unit tests (vitest, jsdom, fake-indexeddb)
+npm run test:regression  # DOM walker regression script
+npm run test:e2e         # Build, then drive the unpacked extension in Playwright Chromium
+                         #   against a local mock OpenAI-compatible server
 ```
 
-No test framework is configured. Validation is done via `npm run compile` (type check) and `npm run lint`.
+Unit tests live in `tests/`. Never call a real model in tests; mock the model caller or run the e2e mock server.
 
 ## Environment Setup
 
-Copy `.env.example` to `.env`. Minimum required: `VITE_WXT_DEFAULT_API_KEY`. Variables are injected at build time via Vite.
+Optional: copy `.env.example` to `.env` to bake a default API endpoint, key and model into the build. Variables are injected at build time via Vite. Without it, users add an API configuration in the options page.
 
 ## Architecture
 
@@ -74,10 +78,19 @@ src/modules/
 ├── pronunciation/           # Pronunciation ecosystem
 │   ├── services/            # PronunciationService, TTSService
 │   ├── phonetic/            # PhoneticProviderFactory, DictionaryApiProvider
-│   ├── tts/                 # TTSProviderFactory, YoudaoTTSProvider, WebSpeechTTSProvider
-│   └── translation/         # AITranslationProvider (AI definitions)
+│   ├── tts/                 # TTSProviderFactory, WebSpeechTTSProvider (voice for the target language)
+│   └── translation/         # AITranslationProvider (gloss + learner grammar for a word)
+├── sentence/                # Sentence mode
+│   ├── segmentation.ts      # Flatten block text, Intl.Segmenter, map sentences back to text nodes
+│   ├── prompt.ts / parser.ts # Analysis prompt (bump PROMPT_VERSION on change) and tolerant JSON parsing
+│   ├── selection.ts         # Pure selection: new-word count, cold-start CEFR, grammar gating, page cap
+│   ├── vocabulary.ts        # Known-word state transitions, import/export
+│   ├── SentenceRenderer.ts  # In-place rendering with exact DOM restoration
+│   ├── SentenceTranslationService.ts # Orchestrator: cache, batching, rendering, word card, exposures
+│   └── store/               # IndexedDB (extension origin only) + content-script message client
 ├── background/services/     # ApiProxyService, NotificationService, CommandService,
 │                            #   InitializationService, UpdateCheckService
+│                            #   (background.ts also serves sentence-store messages)
 ├── floatingBall/            # FloatingBallManager - configurable floating UI widget
 ├── contextMenu/             # ContextMenuManager - browser right-click menu
 ├── infrastructure/ratelimit/ # RateLimiterService
@@ -103,6 +116,10 @@ User Settings (Popup/Options)
 - **Factory pattern**: `ApiServiceFactory` (selects OpenAI/Gemini provider), `PhoneticProviderFactory`, `TTSProviderFactory`. Adding a new provider means implementing the interface and registering in the factory.
 - **Event-driven messaging**: `MessagingService` wraps `browser.runtime.sendMessage` / `browser.tabs.sendMessage`. Message types defined in `core/messaging/types.ts` (e.g., `SETTINGS_UPDATED`, `WEBSITE_MANAGEMENT_UPDATED`, `CONTEXT_MENU_ACTION`).
 
+### Sentence mode storage
+
+Content scripts must not open IndexedDB: their storage belongs to the visited site. The analysis cache and known-word store live in the extension origin (`SentenceStore`), opened by the background script and the options page; content scripts use `SentenceStoreClient`, which sends `sentence-store` runtime messages.
+
 ### Content Script Pipeline
 
 `ContentManager` is the root coordinator in the content script. It initializes:
@@ -120,7 +137,7 @@ User Settings (Popup/Options)
 
 ### i18n
 
-5 UI languages supported. Locale files in `src/i18n/locales/`. Uses `@intlify/unplugin-vue-i18n` for compile-time optimization. All user-facing strings must go through Vue I18n.
+3 UI languages (English, Korean, Spanish); missing strings fall back to English, and new strings only need adding to `en-US.json`. Locale files in `src/i18n/locales/`. Uses `@intlify/unplugin-vue-i18n` for compile-time optimization. All user-facing strings in the Vue UI must go through Vue I18n. Keep the codebase free of Chinese text.
 
 ### UI Stack
 
