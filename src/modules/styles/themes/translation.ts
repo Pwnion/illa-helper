@@ -1,34 +1,34 @@
 /**
- * 翻译样式主题
- * 包含不同的翻译样式定义
+ * Translation style themes,
+ * one definition per translation style
  */
 
 export const TRANSLATION_STYLES = `
-/* 默认样式 */
+/* Default */
 .wxt-style-default {
   color: var(--wxt-primary-color);
   font-weight: 500;
 }
 
-/* 微妙样式 */
+/* Subtle */
 .wxt-style-subtle {
   color: var(--wxt-label-color);
   opacity: 0.9;
 }
 
-/* 粗体样式 */
+/* Bold */
 .wxt-style-bold {
   color: var(--wxt-primary-color);
   font-weight: bold;
 }
 
-/* 斜体样式 */
+/* Italic */
 .wxt-style-italic {
   color: var(--wxt-primary-color);
   font-style: italic;
 }
 
-/* 下划线样式 */
+/* Underlined */
 .wxt-style-underlined {
   color: var(--wxt-primary-color);
   text-decoration-line: underline;
@@ -37,7 +37,7 @@ export const TRANSLATION_STYLES = `
   text-underline-offset: 3px;
 }
 
-/* 高亮样式 */
+/* Highlighted */
 .wxt-style-highlighted {
   color: #212529;
   background-color: #ffeb3b;
@@ -45,7 +45,7 @@ export const TRANSLATION_STYLES = `
   border-radius: 2px;
 }
 
-/* 点画线样式 */
+/* Dotted */
 .wxt-style-dotted {
   background: linear-gradient(to right, #57bcb8 0%, #59c1bf 50%, transparent 50%, transparent 100%) repeat-x left bottom;
   background-size: 8px 2px;
@@ -56,7 +56,7 @@ export const TRANSLATION_STYLES = `
   border-color: var(--wxt-primary-color);
 }
 
-/* 学习模式样式 */
+/* Learning mode */
 .wxt-translation-term--learning {
   filter: blur(5px);
   cursor: pointer;
@@ -68,7 +68,7 @@ export const TRANSLATION_STYLES = `
   filter: blur(0);
 }
 
-/* 学习模式原文样式 - 全面增强悬停支持 */
+/* Learning mode original text, with full hover support */
 .wxt-original-word--learning {
   filter: blur(5px);
   cursor: pointer;
@@ -79,12 +79,12 @@ export const TRANSLATION_STYLES = `
   filter: blur(0) !important;
 }
 
-/* 增强a标签内学习模式的悬停支持 */
+/* Hover support for learning mode inside links */
 a .wxt-original-word--learning:hover,
 a:hover .wxt-original-word--learning {
   filter: blur(0) !important;
 }
-/* 段落翻译状态控制 */
+/* Paragraph translation visibility */
 .wxt-translation-hidden .illa-paragraph-translation {
   display: none !important;
 }

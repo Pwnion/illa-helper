@@ -1,11 +1,11 @@
 /**
- * 智能段落观察器 - 用于懒加载
+ * Segment observer used for lazy loading
  */
 
 import { ContentSegment } from '../../processing/ProcessingStateManager';
 
 /**
- * 观察器回调函数
+ * Observer callback
  */
 export type SegmentObserverCallback = (
   visibleSegments: ContentSegment[],
@@ -13,16 +13,16 @@ export type SegmentObserverCallback = (
 ) => void;
 
 /**
- * 观察器配置选项
+ * Observer options
  */
 export interface SegmentObserverOptions {
-  /** 预加载距离百分比 */
+  /** Preload distance as a fraction of the viewport */
   preloadDistance?: number;
 }
 
 /**
- * 智能段落观察器
- * 基于 IntersectionObserver 实现懒加载功能
+ * Segment observer
+ * built on IntersectionObserver for lazy loading
  */
 export class SegmentObserver {
   private observer: IntersectionObserver | null = null;
@@ -41,7 +41,7 @@ export class SegmentObserver {
   }
 
   /**
-   * 初始化观察器
+   * Creates the observer
    */
   private initializeObserver(): void {
     if (typeof IntersectionObserver === 'undefined') {
@@ -63,12 +63,12 @@ export class SegmentObserver {
         observerOptions,
       );
     } catch (error) {
-      console.error('[SegmentObserver] 创建观察器失败:', error);
+      console.error('[SegmentObserver] Failed to create observer:', error);
     }
   }
 
   /**
-   * 处理交集变化
+   * Handles intersection changes
    */
   private handleIntersection(entries: IntersectionObserverEntry[]): void {
     if (this.isDestroyed || !this.observer) return;
@@ -91,13 +91,13 @@ export class SegmentObserver {
       try {
         this.callback(visibleSegments, invisibleSegments);
       } catch (error) {
-        console.error('[SegmentObserver] 回调执行失败:', error);
+        console.error('[SegmentObserver] Callback failed:', error);
       }
     }
   }
 
   /**
-   * 观察段落
+   * Observes a segment
    */
   observe(segment: ContentSegment): void {
     if (this.isDestroyed || !this.observer) return;
@@ -112,12 +112,12 @@ export class SegmentObserver {
       this.observer.observe(targetElement);
       this.emitIfInitiallyVisible(segment);
     } catch (error) {
-      console.error('[SegmentObserver] 观察段落失败:', error);
+      console.error('[SegmentObserver] Failed to observe segment:', error);
     }
   }
 
   /**
-   * 停止观察段落
+   * Stops observing a segment
    */
   unobserve(segment: ContentSegment): void {
     if (this.isDestroyed || !this.observer) return;
@@ -129,12 +129,12 @@ export class SegmentObserver {
       this.observer.unobserve(targetElement);
       this.segmentMap.delete(targetElement);
     } catch (error) {
-      console.error('[SegmentObserver] 停止观察失败:', error);
+      console.error('[SegmentObserver] Failed to stop observing:', error);
     }
   }
 
   /**
-   * 批量观察段落
+   * Observes several segments
    */
   observeMultiple(segments: ContentSegment[]): void {
     segments.forEach((segment) => this.observe(segment));
@@ -159,14 +159,14 @@ export class SegmentObserver {
   }
 
   /**
-   * 批量停止观察段落
+   * Stops observing several segments
    */
   unobserveMultiple(segments: ContentSegment[]): void {
     segments.forEach((segment) => this.unobserve(segment));
   }
 
   /**
-   * 更新观察器配置
+   * Updates observer options
    */
   updateOptions(newOptions: SegmentObserverOptions): void {
     if (this.isDestroyed) return;
@@ -181,21 +181,24 @@ export class SegmentObserver {
   }
 
   /**
-   * 断开所有观察
+   * Disconnects all observation
    */
   disconnect(): void {
     if (this.observer) {
       try {
         this.observer.disconnect();
       } catch (error) {
-        console.error('[SegmentObserver] 断开观察器失败:', error);
+        console.error(
+          '[SegmentObserver] Failed to disconnect observer:',
+          error,
+        );
       }
     }
     this.segmentMap.clear();
   }
 
   /**
-   * 销毁观察器
+   * Destroys the observer
    */
   destroy(): void {
     if (this.isDestroyed) return;
@@ -204,7 +207,7 @@ export class SegmentObserver {
     this.observer = null;
   }
 
-  // 状态查询方法
+  // State queries
   getObservedCount(): number {
     return this.segmentMap.size;
   }

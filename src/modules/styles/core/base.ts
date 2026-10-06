@@ -1,10 +1,10 @@
 /**
- * 基础样式
- * 包含翻译元素的基础样式定义，基于原始样式重建
+ * Base styles
+ * for translation elements
  */
 
 export const BASE_STYLES = `
-/* 基础样式 */
+/* Base */
 .wxt-word-container {
   display: inline;
   position: relative;
@@ -27,7 +27,7 @@ export const BASE_STYLES = `
   vertical-align: baseline;
 }
 
-/* 学习模式样式 */
+/* Learning mode */
 .wxt-translation-term--learning {
   filter: blur(5px);
   cursor: pointer;
@@ -39,7 +39,7 @@ export const BASE_STYLES = `
   filter: blur(0);
 }
 
-/* 学习模式原文样式 - 全面增强悬停支持 */
+/* Learning mode original text, with full hover support */
 .wxt-original-word--learning {
   filter: blur(5px);
   cursor: pointer;
@@ -50,13 +50,13 @@ export const BASE_STYLES = `
   filter: blur(0) !important;
 }
 
-/* 增强a标签内学习模式的悬停支持 */
+/* Hover support for learning mode inside links */
 a .wxt-original-word--learning:hover,
 a:hover .wxt-original-word--learning {
   filter: blur(0) !important;
 }
 
-/* 短语翻译双层交互样式 */
+/* Two-layer phrase interaction */
 .wxt-has-word-overlay {
   position: relative !important;
 }
@@ -79,12 +79,12 @@ a:hover .wxt-original-word--learning {
   background-color: rgba(106, 136, 224, 0.15) !important;
 }
 
-/* 处理状态样式 */
+/* Processing state */
 .wxt-processing {
   pointer-events: none !important;
 }
 
-/* 确保链接元素在处理状态下仍然可以点击 */
+/* Links stay clickable while processing */
 a.wxt-processing,
 a.wxt-processing *,
 .wxt-processing a,
@@ -93,7 +93,7 @@ a.wxt-processing *,
   cursor: pointer !important;
 }
 
-/* 确保按钮元素在处理状态下仍然可以点击 */
+/* Buttons stay clickable while processing */
 button.wxt-processing,
 button.wxt-processing *,
 .wxt-processing button,
@@ -102,7 +102,7 @@ button.wxt-processing *,
   cursor: pointer !important;
 }
 
-/* 确保可点击元素在处理状态下仍然可以点击 */
+/* Clickable elements stay clickable while processing */
 [onclick].wxt-processing,
 [onclick].wxt-processing *,
 .wxt-processing [onclick],
@@ -112,13 +112,13 @@ button.wxt-processing *,
 }
 
 
-/* 错误状态样式 */
+/* Error state */
 .wxt-error {
   color: #ff6b6b !important;
   text-decoration: line-through;
 }
 
-/* 响应式适配 */
+/* Responsive */
 @media (max-width: 768px) {
   .wxt-word-container {
     font-size: 14px;
@@ -129,30 +129,29 @@ button.wxt-processing *,
   }
 }
 
-/* 动画定义 */
+/* Animations */
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
 
-/* ===== 翻译状态控制系统 ===== */
+/* ===== Translation visibility ===== */
 
 /**
- * 全局翻译状态控制
+ * Global translation visibility.
  *
- * 原理：通过在 body 上添加/移除 CSS 类来控制所有翻译内容的显示状态
- * 优势：
- * - 高性能：避免逐个元素操作
- * - 自动继承：新添加的翻译内容自动应用当前状态
- * - 统一管理：所有翻译内容状态保持一致
+ * A class on <body> controls whether translated content is shown, which:
+ * - avoids touching each element,
+ * - applies automatically to translations added later,
+ * - keeps every translation in the same state.
  */
 .wxt-translation-hidden .wxt-translation-term {
   display: none !important;
 }
 
 /**
- * 状态切换过渡效果
- * 为翻译内容的显示/隐藏提供平滑的视觉过渡
+ * Visibility transitions
+ * for showing and hiding translated content
  */
 .wxt-translation-term {
   transition: opacity 0.2s ease-in-out;

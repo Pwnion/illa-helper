@@ -1,19 +1,19 @@
 /**
- * 定时器管理器
- * 统一管理所有定时器，避免内存泄漏
+ * Timer manager.
+ * Tracks every timer in one place to avoid leaks.
  */
 
 export class TimerManager {
   private timers = new Map<string, number>();
 
   /**
-   * 设置定时器
-   * @param key 定时器键名
-   * @param callback 回调函数
-   * @param delay 延迟时间（毫秒）
+   * Sets a timer
+   * @param key timer key
+   * @param callback callback
+   * @param delay delay in milliseconds
    */
   set(key: string, callback: () => void, delay: number): void {
-    // 清除已存在的同名定时器
+    // Clear any existing timer with the same key
     this.clear(key);
 
     const timerId = window.setTimeout(() => {
@@ -25,8 +25,8 @@ export class TimerManager {
   }
 
   /**
-   * 清除指定定时器
-   * @param key 定时器键名
+   * Clears a timer
+   * @param key timer key
    */
   clear(key: string): void {
     const timerId = this.timers.get(key);
@@ -37,7 +37,7 @@ export class TimerManager {
   }
 
   /**
-   * 清除所有定时器
+   * Clears every timer
    */
   clearAll(): void {
     for (const timerId of this.timers.values()) {
@@ -47,29 +47,29 @@ export class TimerManager {
   }
 
   /**
-   * 检查定时器是否存在
-   * @param key 定时器键名
+   * Whether a timer exists
+   * @param key timer key
    */
   has(key: string): boolean {
     return this.timers.has(key);
   }
 
   /**
-   * 获取当前定时器数量
+   * Number of active timers
    */
   size(): number {
     return this.timers.size;
   }
 
   /**
-   * 获取所有定时器键名
+   * Keys of all active timers
    */
   keys(): string[] {
     return Array.from(this.timers.keys());
   }
 
   /**
-   * 销毁管理器
+   * Destroys the manager
    */
   destroy(): void {
     this.clearAll();

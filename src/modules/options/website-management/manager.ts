@@ -1,7 +1,7 @@
 import glob from './glob';
 import { WebsiteRule, WebsiteManagementSettings, WebsiteStatus } from './types';
 
-// 默认设置
+// Default settings
 const DEFAULT_SETTINGS: WebsiteManagementSettings = { rules: [] };
 const STORAGE_KEY = 'website-management-settings';
 
@@ -10,51 +10,51 @@ export class WebsiteManager {
   private cacheTimestamp: number | null = null;
 
   /**
-   * 获取网站状态
+   * Returns the website's rule status
    */
   async getWebsiteStatus(url: string): Promise<WebsiteStatus> {
-    console.log(`[WebsiteManager] 获取网站状态: ${url}`);
+    console.log(`[WebsiteManager] Getting website status: ${url}`);
 
-    // 不立即清除缓存，先检查缓存是否有效
+    // Keep the cache unless it has expired
     const settings = await this.getSettings();
 
-    // 添加缓存时间戳检查，如果缓存超过5秒则清除
+    // Clear the cache when it is more than 5 seconds old
     const now = Date.now();
     if (this.cacheTimestamp && now - this.cacheTimestamp > 5000) {
-      console.log('[WebsiteManager] 缓存过期，清除缓存');
+      console.log('[WebsiteManager] Cache expired, clearing');
       this.clearCache();
     }
 
-    // 先检查黑名单规则（优先级最高）
+    // Blacklist rules take priority
     const blacklistRules = settings.rules.filter(
       (rule) => rule.type === 'blacklist' && rule.enabled,
     );
 
     for (const rule of blacklistRules) {
       if (glob.match(rule.pattern, url)) {
-        console.log(`[WebsiteManager] 匹配黑名单规则: ${rule.pattern}`);
+        console.log(`[WebsiteManager] Matched blacklist rule: ${rule.pattern}`);
         return 'blacklisted';
       }
     }
 
-    // 再检查白名单规则
+    // Then whitelist rules
     const whitelistRules = settings.rules.filter(
       (rule) => rule.type === 'whitelist' && rule.enabled,
     );
 
     for (const rule of whitelistRules) {
       if (glob.match(rule.pattern, url)) {
-        console.log(`[WebsiteManager] 匹配白名单规则: ${rule.pattern}`);
+        console.log(`[WebsiteManager] Matched whitelist rule: ${rule.pattern}`);
         return 'whitelisted';
       }
     }
 
-    console.log('[WebsiteManager] 网站状态正常');
+    console.log('[WebsiteManager] No rule matched');
     return 'normal';
   }
 
   /**
-   * 检查是否被黑名单禁用
+   * Whether the site is blacklisted
    */
   async isBlacklisted(url: string): Promise<boolean> {
     const status = await this.getWebsiteStatus(url);
@@ -62,7 +62,7 @@ export class WebsiteManager {
   }
 
   /**
-   * 检查是否在白名单中
+   * Whether the site is whitelisted
    */
   async isWhitelisted(url: string): Promise<boolean> {
     const status = await this.getWebsiteStatus(url);
@@ -70,7 +70,7 @@ export class WebsiteManager {
   }
 
   /**
-   * 获取所有规则
+   * Returns every rule
    */
   async getRules(): Promise<WebsiteRule[]> {
     const settings = await this.getSettings();
@@ -78,19 +78,19 @@ export class WebsiteManager {
   }
 
   /**
-   * 根据类型获取规则
+   * Returns the rules of one type
    */
   async getRulesByType(
     type: 'blacklist' | 'whitelist',
   ): Promise<WebsiteRule[]> {
-    // 清除缓存确保获取最新规则列表
+    // Clear the cache to get the latest rules
     this.clearCache();
     const settings = await this.getSettings();
     return settings.rules.filter((rule) => rule.type === type);
   }
 
   /**
-   * 添加规则
+   * Adds a rule
    */
   async addRule(
     pattern: string,
@@ -99,20 +99,20 @@ export class WebsiteManager {
   ): Promise<void> {
     if (!pattern) return;
 
-    // 强制清除缓存，确保获取最新数据，避免使用过期缓存导致已删除数据被恢复
+    // Force-clear the cache so stale data cannot resurrect deleted rules
     this.clearCache();
     const settings = await this.getSettings();
 
-    // 检查是否已存在相同pattern的规则（不论类型）
+    // Look for an existing rule with the same pattern (any type)
     const existingRule = settings.rules.find(
       (rule) => rule.pattern === pattern,
     );
 
     if (existingRule) {
       if (existingRule.type === type) {
-        return; // 完全相同的规则已存在，不重复添加
+        return; // an identical rule already exists
       } else {
-        // 同一 pattern 只能保留一种规则类型。
+        // A pattern can only have one rule type.
         const ruleIndex = settings.rules.findIndex(
           (rule) => rule.id === existingRule.id,
         );
@@ -133,18 +133,18 @@ export class WebsiteManager {
 
     settings.rules.push(newRule);
     await this.saveSettings(settings);
-    this.clearCache(); // 清除缓存确保数据是最新的
+    this.clearCache(); // keep the data fresh
   }
 
   /**
-   * 更新规则
+   * Updates a rule
    */
   async updateRule(id: string, updates: Partial<WebsiteRule>): Promise<void> {
     const settings = await this.getSettings();
     const ruleIndex = settings.rules.findIndex((rule) => rule.id === id);
 
     if (ruleIndex === -1) {
-      throw new Error('规则不存在');
+      throw new Error('Rule not found');
     }
 
     settings.rules[ruleIndex] = {
@@ -153,11 +153,11 @@ export class WebsiteManager {
     };
 
     await this.saveSettings(settings);
-    this.clearCache(); // 清除缓存确保数据是最新的
+    this.clearCache(); // keep the data fresh
   }
 
   /**
-   * 删除规则
+   * Removes a rule
    */
   async removeRule(id: string): Promise<void> {
     const settings = await this.getSettings();
@@ -166,22 +166,22 @@ export class WebsiteManager {
     if (ruleIndex > -1) {
       settings.rules.splice(ruleIndex, 1);
       await this.saveSettings(settings);
-      this.clearCache(); // 清除缓存确保数据是最新的
+      this.clearCache(); // keep the data fresh
     }
   }
 
   /**
-   * 批量删除规则
+   * Removes several rules
    */
   async removeRules(ids: string[]): Promise<void> {
     const settings = await this.getSettings();
     settings.rules = settings.rules.filter((rule) => !ids.includes(rule.id));
     await this.saveSettings(settings);
-    this.clearCache(); // 清除缓存确保数据是最新的
+    this.clearCache(); // keep the data fresh
   }
 
   /**
-   * 使用当前格式规则替换网站规则列表。
+   * Replaces the website rules with rules in the current format.
    */
   async replaceRules(rules: WebsiteRule[]): Promise<number> {
     const normalizedSettings = this.normalizeSettings({ rules });
@@ -191,7 +191,7 @@ export class WebsiteManager {
   }
 
   /**
-   * 启用/禁用规则
+   * Enables or disables a rule
    */
   async toggleRule(id: string): Promise<void> {
     const settings = await this.getSettings();
@@ -200,12 +200,12 @@ export class WebsiteManager {
     if (rule) {
       rule.enabled = !rule.enabled;
       await this.saveSettings(settings);
-      this.clearCache(); // 清除缓存确保数据是最新的
+      this.clearCache(); // keep the data fresh
     }
   }
 
   /**
-   * 获取设置
+   * Loads the settings
    */
   private async getSettings(): Promise<WebsiteManagementSettings> {
     if (this.settingsCache) {
@@ -226,14 +226,14 @@ export class WebsiteManager {
       this.settingsCache = DEFAULT_SETTINGS;
       return DEFAULT_SETTINGS;
     } catch (error) {
-      console.error('获取网站管理设置失败:', error);
+      console.error('Failed to load website management settings:', error);
       this.settingsCache = DEFAULT_SETTINGS;
       return DEFAULT_SETTINGS;
     }
   }
 
   /**
-   * 保存设置
+   * Saves the settings
    */
   private async saveSettings(
     settings: WebsiteManagementSettings,
@@ -242,9 +242,9 @@ export class WebsiteManager {
       const serializedSettings = JSON.stringify(settings);
       await browser.storage.sync.set({ [STORAGE_KEY]: serializedSettings });
       this.settingsCache = settings;
-      this.cacheTimestamp = Date.now(); // 更新缓存
+      this.cacheTimestamp = Date.now(); // refresh the cache
     } catch (error) {
-      console.error('保存网站管理设置失败:', error);
+      console.error('Failed to save website management settings:', error);
     }
   }
 
@@ -295,14 +295,14 @@ export class WebsiteManager {
   }
 
   /**
-   * 生成唯一ID
+   * Generates a unique ID
    */
   private generateId(): string {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
   }
 
   /**
-   * 清除缓存
+   * Clears the cache
    */
   clearCache(): void {
     this.settingsCache = null;

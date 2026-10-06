@@ -1,6 +1,6 @@
 /**
- * 悬浮球管理器
- * 负责在页面上创建和管理翻译悬浮球
+ * Floating ball manager:
+ * creates and manages the on-page translation floating ball
  */
 
 import type { FloatingBallConfig } from '../../shared/types/ui';
@@ -22,20 +22,20 @@ export class FloatingBallManager {
   private savePositionTimer: number | null = null;
 
   private storageService: StorageService;
-  // 事件监听器引用管理
+  // Event listener references
   private eventListeners: Array<{
     target: EventTarget;
     type: string;
     listener: EventListener;
     options?: boolean | AddEventListenerOptions;
   }> = [];
-  // 双击和触摸检测
+  // Double-click and touch detection
   private lastClickTime = 0;
   private clickDebounceTimer: number | null = null;
   private isTouchDevice = false;
-  // 菜单悬停相关
+  // Menu hover
   private menuHoverTimer: number | null = null;
-  private menuItemsEventsBound = false; // 防止重复绑定菜单项事件
+  private menuItemsEventsBound = false; // prevents binding menu item events twice
 
   constructor(config: FloatingBallConfig) {
     this.config = config;
@@ -46,16 +46,16 @@ export class FloatingBallManager {
       currentPosition: config.position,
     };
 
-    // 初始化服务
+    // Initialise services
     this.storageService = StorageService.getInstance();
 
-    // 初始化触摸设备检测
+    // Detect touch devices
     this.isTouchDevice =
       'ontouchstart' in window || navigator.maxTouchPoints > 0;
   }
 
   /**
-   * 统一的事件监听器绑定方法
+   * Binds an event listener and records it for cleanup
    */
   private bindEventListener<K extends keyof DocumentEventMap>(
     target: EventTarget,
@@ -86,7 +86,7 @@ export class FloatingBallManager {
   }
 
   /**
-   * 清理所有事件监听器
+   * Removes every event listener
    */
   private removeAllEventListeners(): void {
     this.eventListeners.forEach(({ target, type, listener, options }) => {
@@ -96,7 +96,7 @@ export class FloatingBallManager {
   }
 
   /**
-   * 初始化悬浮球
+   * Initialises the floating ball
    */
   init(onTranslate?: () => void): void {
     this.onTranslateCallback = onTranslate;
@@ -109,7 +109,7 @@ export class FloatingBallManager {
   }
 
   /**
-   * 更新配置
+   * Updates the configuration
    */
   updateConfig(config: FloatingBallConfig): void {
     const wasEnabled = this.config.enabled;
@@ -117,24 +117,24 @@ export class FloatingBallManager {
     this.state.currentPosition = config.position;
 
     if (config.enabled && !wasEnabled) {
-      // 从禁用变为启用
+      // Disabled -> enabled
       this.createBall();
       this.setupEventListeners();
       this.state.isVisible = true;
     } else if (!config.enabled && wasEnabled) {
-      // 从启用变为禁用
+      // Enabled -> disabled
       this.destroy();
       this.state.isVisible = false;
     } else if (config.enabled && this.ballElement) {
-      // 更新样式
+      // Update styles
       this.updateBallStyle();
-      // 确保位置精确
+      // Keep the position exact
       this.calibratePosition();
     }
   }
 
   /**
-   * 创建悬浮球元素
+   * Creates the floating ball element
    */
   private createBall(): void {
     if (this.ballElement) {
@@ -146,7 +146,7 @@ export class FloatingBallManager {
     this.ballElement.className = 'wxt-floating-ball';
     safeSetInnerHTML(this.ballElement, this.createBallIcon());
 
-    // 设置初始tooltip
+    // Initial tooltip
     this.updateTooltipText();
 
     this.updateBallStyle();
@@ -227,7 +227,7 @@ export class FloatingBallManager {
   }
 
   /**
-   * 创建菜单容器 - 卡片式面板
+   * Creates the menu container (card panel)
    */
   private createMenu(): void {
     if (this.menuContainer) {
@@ -239,32 +239,32 @@ export class FloatingBallManager {
     this.menuContainer.className = 'wxt-floating-panel';
     safeSetInnerHTML(this.menuContainer, this.createMenuItems());
 
-    // 注入面板样式
+    // Inject panel styles
     this.injectPanelStyles();
 
     uiRoot.appendChild(this.menuContainer);
-    // 初始隐藏
+    // Hidden initially
     this.updateMenuStyle();
   }
 
   /**
-   * 创建面板内容
+   * Creates the panel content
    */
   private createMenuItems(): string {
-    // 获取翻译状态
+    // Translation state
     const hasTranslatedContent = this.hasTranslatedContent();
     const isTranslationHidden = document.body.classList.contains(
       'wxt-translation-hidden',
     );
 
     let statusClass = 'wxt-status--ready';
-    let statusText = '准备翻译';
+    let statusText = 'Ready to translate';
     if (hasTranslatedContent && !isTranslationHidden) {
       statusClass = 'wxt-status--translated';
-      statusText = '翻译模式';
+      statusText = 'Showing translation';
     } else if (hasTranslatedContent && isTranslationHidden) {
       statusClass = 'wxt-status--original';
-      statusText = '原文模式';
+      statusText = 'Showing original';
     }
 
     const actionButtons = MENU_ACTIONS.map((action) => {
@@ -290,7 +290,7 @@ export class FloatingBallManager {
   }
 
   /**
-   * 注入面板样式
+   * Injects the panel styles
    */
   private injectPanelStyles(): void {
     const uiRoot = this.ensureUiRoot();
@@ -323,7 +323,7 @@ export class FloatingBallManager {
         transform: translateX(0) scale(1);
       }
 
-      /* 状态栏 */
+      /* Status bar */
       .wxt-panel-status {
         display: flex;
         align-items: center;
@@ -357,14 +357,14 @@ export class FloatingBallManager {
         letter-spacing: 0.2px;
       }
 
-      /* 分割线 */
+      /* Divider */
       .wxt-panel-divider {
         height: 1px;
         background: rgba(106, 136, 224, 0.12);
         margin: 0 2px 8px 2px;
       }
 
-      /* 操作按钮网格 */
+      /* Action button grid */
       .wxt-panel-actions {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -413,7 +413,7 @@ export class FloatingBallManager {
         line-height: 1;
       }
 
-      /* 深色模式 */
+      /* Dark mode */
       @media (prefers-color-scheme: dark) {
         .wxt-floating-panel {
           background: rgba(30, 30, 36, 0.85);
@@ -443,47 +443,47 @@ export class FloatingBallManager {
   }
 
   /**
-   * 创建悬浮球图标
+   * Creates the floating ball icon.
    *
-   * 根据翻译状态动态生成不同的视觉效果：
-   * - 无翻译内容：默认紫蓝渐变背景 + 蓝色状态点（准备翻译）
-   * - 显示翻译：紫蓝渐变背景 + 绿色状态点（翻译模式）
-   * - 隐藏翻译：粉红渐变背景 + 红色状态点（原文模式）
+   * The look depends on the translation state:
+   * - no translations: purple-blue gradient with a blue dot (ready)
+   * - translations shown: purple-blue gradient with a green dot (showing translation)
+   * - translations hidden: pink gradient with a red dot (showing original)
    *
-   * @returns SVG图标字符串
+   * @returns SVG icon markup
    */
   private createBallIcon(): string {
     const { iconSize } = FLOATING_BALL_STYLES;
 
-    // 检查翻译状态
+    // Check translation state
     const hasTranslatedContent = this.hasTranslatedContent();
     const isTranslationHidden = document.body.classList.contains(
       'wxt-translation-hidden',
     );
 
-    // 定义三种状态
+    // The three states
     let stateConfig;
     if (!hasTranslatedContent) {
-      // 无翻译内容 - 默认状态（准备翻译）
+      // No translations: default (ready)
       stateConfig = {
         colors: { start: '#667eea', end: '#764ba2', dot: '#4f7cff' },
         opacity: '0.9',
       };
     } else if (isTranslationHidden) {
-      // 有翻译内容但被隐藏 - 原文模式
+      // Translations hidden: showing original
       stateConfig = {
         colors: { start: '#f093fb', end: '#f5576c', dot: '#ff6b6b' },
         opacity: '0.8',
       };
     } else {
-      // 有翻译内容且可见 - 翻译模式
+      // Translations visible: showing translation
       stateConfig = {
         colors: { start: '#667eea', end: '#764ba2', dot: '#00ff88' },
         opacity: '1',
       };
     }
 
-    // 翻译图标路径（统一使用同一个图标）
+    // Translation icon path (same icon for every state)
     const iconPath =
       'M16 10h2l4.4 11h-2.155l-1.201-3h-4.09l-1.199 3h-2.154L16 10zm1 2.885L15.753 16h2.492L17 12.885zM3 4h10v2H9v7h4v2H9v4H7v-4H3v-2h4V6H3V4zM17 3a4 4 0 0 1 4 4v2h-2V7a2 2 0 0 0-2-2h-3V3h3zM5 15v2a2 2 0 0 0 2 2h3v2H7a4 4 0 0 1-4-4v-2h2z';
 
@@ -503,7 +503,7 @@ export class FloatingBallManager {
   }
 
   /**
-   * 注入简洁动画样式
+   * Injects the animation styles
    */
   private injectPulseAnimation(): void {
     const uiRoot = this.ensureUiRoot();
@@ -526,12 +526,12 @@ export class FloatingBallManager {
   }
 
   /**
-   * 校准位置 - 确保位置准确性和边界安全
+   * Calibrates the position so it is accurate and within bounds
    */
   private calibratePosition(): void {
     if (!this.ballElement) return;
 
-    // 验证并修正位置
+    // Validate and correct the position
     const correctedPosition = this.validateAndCorrectPosition(
       this.config.position,
     );
@@ -540,7 +540,7 @@ export class FloatingBallManager {
       this.state.currentPosition = correctedPosition;
     }
 
-    // 重新设置位置，确保精确对齐
+    // Re-apply the position so it lines up exactly
     requestAnimationFrame(() => {
       if (this.ballElement) {
         this.ballElement.style.top = `${this.config.position}%`;
@@ -549,23 +549,23 @@ export class FloatingBallManager {
   }
 
   /**
-   * 验证并修正位置，确保在安全边界内
+   * Validates and corrects the position so it stays within safe bounds
    */
   private validateAndCorrectPosition(position: number): number {
-    // 基本有效性检查
+    // Basic validity check
     if (!this.isValidPosition(position)) {
-      return 50; // 默认中间位置
+      return 50; // default: centred
     }
 
-    // 边界检测和修正
+    // Bounds check and correction
     const windowHeight = window.innerHeight;
     const ballSize = FLOATING_BALL_STYLES.size;
 
-    // 计算安全边界（百分比）
+    // Safe bounds as percentages
     const minSafePercent = (ballSize / 2 / windowHeight) * 100;
     const maxSafePercent = ((windowHeight - ballSize / 2) / windowHeight) * 100;
 
-    // 确保在安全边界内
+    // Clamp to the safe bounds
     const safePosition = Math.max(
       Math.max(DRAG_CONFIG.minPosition, minSafePercent),
       Math.min(Math.min(DRAG_CONFIG.maxPosition, maxSafePercent), position),
@@ -575,7 +575,7 @@ export class FloatingBallManager {
   }
 
   /**
-   * 更新悬浮球样式
+   * Updates the floating ball styles
    */
   private updateBallStyle(): void {
     if (!this.ballElement) return;
@@ -583,7 +583,7 @@ export class FloatingBallManager {
     const { size, right, background, boxShadow, transition, zIndex } =
       FLOATING_BALL_STYLES;
 
-    // 注入动画样式
+    // Inject animation styles
     this.injectPulseAnimation();
 
     const styles = `
@@ -609,23 +609,23 @@ export class FloatingBallManager {
 
     this.ballElement.style.cssText = styles;
 
-    // 校准位置
+    // Calibrate the position
     this.calibratePosition();
   }
 
   /**
-   * 更新面板位置和可见性
+   * Updates panel position and visibility
    */
   private updateMenuStyle(): void {
     if (!this.menuContainer || !this.ballElement) return;
 
     const ballRect = this.ballElement.getBoundingClientRect();
 
-    // 面板定位到悬浮球左侧
+    // Place the panel to the left of the ball
     const gap = 8;
     const rightPos = window.innerWidth - ballRect.left + gap;
 
-    // 垂直居中对齐悬浮球
+    // Vertically centre it on the ball
     const topPos = ballRect.top + ballRect.height / 2;
 
     this.menuContainer.style.right = `${rightPos}px`;
@@ -644,10 +644,10 @@ export class FloatingBallManager {
   }
 
   /**
-   * 更新面板内容（状态变化时调用）
+   * Updates panel content when the state changes
    */
   private updateMenuItemPositions(): void {
-    // 面板模式下不需要逐项定位，只需更新状态显示
+    // The panel only needs its status updated, not per-item positioning
     if (!this.menuContainer) return;
 
     const hasTranslatedContent = this.hasTranslatedContent();
@@ -662,18 +662,18 @@ export class FloatingBallManager {
     dot.className = 'wxt-status-dot';
     if (hasTranslatedContent && !isTranslationHidden) {
       dot.classList.add('wxt-status--translated');
-      text.textContent = '翻译模式';
+      text.textContent = 'Showing translation';
     } else if (hasTranslatedContent && isTranslationHidden) {
       dot.classList.add('wxt-status--original');
-      text.textContent = '原文模式';
+      text.textContent = 'Showing original';
     } else {
       dot.classList.add('wxt-status--ready');
-      text.textContent = '准备翻译';
+      text.textContent = 'Ready to translate';
     }
   }
 
   /**
-   * 设置悬停效果
+   * Sets up hover effects
    */
   private setupHoverEffects(): void {
     if (!this.ballElement) return;
@@ -688,7 +688,7 @@ export class FloatingBallManager {
       activeBoxShadow,
     } = FLOATING_BALL_STYLES;
 
-    // 鼠标进入效果
+    // Mouse enter
     this.ballElement.addEventListener('mouseenter', () => {
       if (!this.state.isDragging && this.ballElement) {
         this.ballElement.style.background = hoverBackground;
@@ -697,7 +697,7 @@ export class FloatingBallManager {
       }
     });
 
-    // 鼠标离开效果
+    // Mouse leave
     this.ballElement.addEventListener('mouseleave', () => {
       if (!this.state.isDragging && this.ballElement) {
         this.ballElement.style.background = background;
@@ -706,7 +706,7 @@ export class FloatingBallManager {
       }
     });
 
-    // 点击激活效果
+    // Press
     this.ballElement.addEventListener('mousedown', () => {
       if (this.ballElement) {
         this.ballElement.style.background = activeBackground;
@@ -714,7 +714,7 @@ export class FloatingBallManager {
       }
     });
 
-    // 点击释放效果
+    // Release
     this.ballElement.addEventListener('mouseup', () => {
       if (!this.state.isDragging && this.ballElement) {
         setTimeout(() => {
@@ -722,44 +722,44 @@ export class FloatingBallManager {
             this.ballElement.style.background = hoverBackground;
             this.ballElement.style.boxShadow = hoverBoxShadow;
           }
-        }, 150); // 短暂显示激活状态后恢复悬停状态
+        }, 150); // briefly show the active state before returning to hover
       }
     });
   }
 
   /**
-   * 设置菜单悬停事件
+   * Sets up menu hover events
    */
   private setupMenuHoverEvents(): void {
     if (!this.ballElement || !this.menuContainer) return;
 
-    // 悬浮球悬停时显示菜单
+    // Show the menu when hovering the ball
     this.bindEventListener(this.ballElement, 'mouseenter', () => {
       this.showMenuOnHover();
     });
 
-    // 悬浮球离开时隐藏菜单（带延迟）
+    // Hide the menu (with a delay) when leaving the ball
     this.bindEventListener(this.ballElement, 'mouseleave', () => {
       this.hideMenuOnLeave();
     });
 
-    // 菜单容器悬停时保持显示
+    // Keep the menu open while hovering it
     this.bindEventListener(this.menuContainer, 'mouseenter', () => {
       this.showMenuOnHover();
     });
 
-    // 菜单容器离开时隐藏菜单
+    // Hide the menu when leaving it
     this.bindEventListener(this.menuContainer, 'mouseleave', () => {
       this.hideMenuOnLeave();
     });
 
-    // 为触摸设备添加点击切换菜单的能力
+    // Tap to toggle the menu on touch devices
     if (this.isTouchDevice) {
       this.bindEventListener(this.ballElement, 'click', (e) => {
         if (!this.state.isDragging) {
           e.preventDefault();
           e.stopPropagation();
-          // 在触摸设备上，点击切换菜单的显示/隐藏状态
+          // On touch devices a tap toggles the menu
           if (this.state.isMenuExpanded) {
             this.hideMenuOnLeave();
           } else {
@@ -771,18 +771,18 @@ export class FloatingBallManager {
   }
 
   /**
-   * 设置事件监听器
+   * Sets up event listeners
    */
   private setupEventListeners(): void {
     if (!this.ballElement) return;
 
-    // 悬停效果
+    // Hover effects
     this.setupHoverEffects();
 
-    // 设置菜单悬停事件
+    // Menu hover events
     this.setupMenuHoverEvents();
 
-    // 点击事件（加入双击处理和去抖动）
+    // Clicks, with double-click handling and debouncing
     this.bindEventListener(this.ballElement, 'click', (e) => {
       if (!this.state.isDragging) {
         e.preventDefault();
@@ -791,8 +791,8 @@ export class FloatingBallManager {
       }
     });
 
-    // 触摸事件处理 - 使用 passive: false 允许我们在需要时阻止默认行为
-    // 但仅当真正需要时才阻止默认行为，以确保页面其他区域能正常滚动
+    // Touch events use passive: false so default behaviour can be prevented when needed,
+    // but only when needed, so the rest of the page still scrolls normally
     this.bindEventListener(
       this.ballElement,
       'touchstart',
@@ -812,7 +812,7 @@ export class FloatingBallManager {
       { passive: false },
     );
 
-    // 同时注册鼠标事件作为后备（但加入设备检测）
+    // Mouse events as a fallback, with device detection
     this.bindEventListener(
       this.ballElement,
       'mousedown',
@@ -827,15 +827,15 @@ export class FloatingBallManager {
   }
 
   /**
-   * 带防抖动的点击处理
+   * Click handling with debouncing
    */
   private handleClickWithDebounce(): void {
     const currentTime = Date.now();
     const timeDiff = currentTime - this.lastClickTime;
 
-    // 检测双击（300ms内的第二次点击）
+    // Detect a double click (second click within 300 ms)
     if (timeDiff < 300) {
-      // 双击，取消之前的定时器，不执行翻译
+      // Double click: cancel the pending timer and do not translate
       if (this.clickDebounceTimer) {
         clearTimeout(this.clickDebounceTimer);
         this.clickDebounceTimer = null;
@@ -850,12 +850,12 @@ export class FloatingBallManager {
 
     this.lastClickTime = currentTime;
 
-    // 清除之前的定时器
+    // Clear any previous timer
     if (this.clickDebounceTimer) {
       clearTimeout(this.clickDebounceTimer);
     }
 
-    // 设置新的定时器，100ms后执行翻译（防止快速点击）
+    // Translate after 100 ms (guards against rapid clicks)
     this.clickDebounceTimer = window.setTimeout(() => {
       this.handleTranslate();
       this.clickDebounceTimer = null;
@@ -863,13 +863,13 @@ export class FloatingBallManager {
   }
 
   /**
-   * 处理翻译
+   * Handles translation
    */
   private handleTranslate(): void {
     if (this.onTranslateCallback && this.ballElement) {
       this.onTranslateCallback();
 
-      // 显示翻译动画
+      // Translation animation
       const { activeBackground, background } = FLOATING_BALL_STYLES;
       this.ballElement.style.background = activeBackground;
 
@@ -882,10 +882,10 @@ export class FloatingBallManager {
   }
 
   /**
-   * 鼠标按下处理（增强事件控制）
+   * Mouse down handling
    */
   private handleMouseDown(e: MouseEvent): void {
-    // 防止在触摸设备上重复处理
+    // Avoid handling twice on touch devices
     if (this.isTouchDevice && e.target && 'ontouchstart' in e.target) {
       return;
     }
@@ -896,23 +896,23 @@ export class FloatingBallManager {
     this.state.isDragging = false;
     this.dragStartY = e.clientY;
 
-    // 记录当前实际位置（像素值）
+    // Record the current position in pixels
     if (this.ballElement) {
       const rect = this.ballElement.getBoundingClientRect();
-      this.ballStartY = rect.top + rect.height / 2; // 球心的实际Y坐标
+      this.ballStartY = rect.top + rect.height / 2; // y of the ball's centre
     }
 
-    // 禁用过渡动画，防止拖拽时的干扰
+    // Disable transitions so they do not interfere with dragging
     if (this.ballElement) {
       this.ballElement.style.transition = 'none';
     }
   }
 
   /**
-   * 鼠标移动处理（增强事件过滤，防止与文本选择冲突）
+   * Mouse move handling (filters events to avoid clashing with text selection)
    */
   private handleMouseMove(e: MouseEvent): void {
-    // 关键修复：只有在悬浮球被明确按下时才处理移动事件
+    // Only handle moves once the ball has actually been pressed
     if (
       !this.ballElement ||
       (!this.state.isDragging && this.dragStartY === 0)
@@ -920,63 +920,63 @@ export class FloatingBallManager {
       return;
     }
 
-    // 检查鼠标按钮状态（必须是左键按下）
+    // The left button must be down
     if (e.buttons !== 1) {
       return;
     }
 
-    // 防止文本选择冲突：检查是否有活动的文本选择
+    // Avoid clashing with an active text selection
     const selection = window.getSelection();
     if (
       selection &&
       selection.toString().length > 0 &&
       !this.state.isDragging
     ) {
-      // 如果存在文本选择且还未开始拖拽，则忽略此事件
+      // Ignore the event if text is selected and dragging has not started
       return;
     }
 
-    // 验证事件来源：确保与悬浮球的初始交互相关
+    // The event must belong to an interaction that started on the ball
     if (this.dragStartY === 0) {
-      // 没有有效的拖拽起始点，忽略事件
+      // No valid drag start point: ignore
       return;
     }
 
-    // 计算移动距离，如果超过阈值则开始拖拽
+    // Start dragging once the movement passes the threshold
     const deltaY = Math.abs(e.clientY - this.dragStartY);
     if (deltaY > DRAG_CONFIG.threshold) {
       this.state.isDragging = true;
     }
 
-    // 如果正在拖拽，则更新位置
+    // Update the position while dragging
     if (this.state.isDragging) {
       e.preventDefault();
       e.stopPropagation();
 
-      // 修复坐标系问题：确保位置计算基于视口而非页面
-      const currentY = e.clientY; // clientY已经是相对于视口的坐标
+      // Positions are viewport-based, not page-based
+      const currentY = e.clientY; // clientY is already viewport-relative
       const windowHeight = window.innerHeight;
       const ballSize = FLOATING_BALL_STYLES.size;
 
-      // 计算新的球心位置（视口坐标系）
+      // New centre position (viewport coordinates)
       const moveY = currentY - this.dragStartY;
       const newPixelY = this.ballStartY + moveY;
 
-      // 确保球不会超出可视区域边界
+      // Keep the ball inside the viewport
       const minPixelY = ballSize / 2;
       const maxPixelY = windowHeight - ballSize / 2;
       const clampedPixelY = Math.max(minPixelY, Math.min(maxPixelY, newPixelY));
 
-      // 转换为百分比（基于球心位置，视口高度）
+      // Convert to a percentage of the viewport height (by centre)
       const newPositionPercent = (clampedPixelY / windowHeight) * 100;
 
-      // 再次限制在配置范围内
+      // Clamp to the configured range
       const finalPosition = Math.max(
         DRAG_CONFIG.minPosition,
         Math.min(DRAG_CONFIG.maxPosition, newPositionPercent),
       );
 
-      // 验证位置有效性
+      // Validate the position
       if (this.isValidPosition(finalPosition)) {
         this.config.position = finalPosition;
         this.state.currentPosition = finalPosition;
@@ -986,7 +986,7 @@ export class FloatingBallManager {
   }
 
   /**
-   * 验证位置是否有效
+   * Whether a position is valid
    */
   private isValidPosition(position: number): boolean {
     return (
@@ -998,15 +998,15 @@ export class FloatingBallManager {
   }
 
   /**
-   * 鼠标释放处理（优化状态管理，防止文本选择冲突）
+   * Mouse up handling (resets state cleanly and avoids text selection clashes)
    */
   private handleMouseUp(e: MouseEvent): void {
-    // 防止在触摸设备上重复处理
+    // Avoid handling twice on touch devices
     if (this.isTouchDevice && e.target && 'ontouchstart' in e.target) {
       return;
     }
 
-    // 只有在有有效拖拽起始点时才处理释放事件
+    // Only handle release when there is a valid drag start point
     if (this.dragStartY === 0) {
       return;
     }
@@ -1014,7 +1014,7 @@ export class FloatingBallManager {
     e.preventDefault();
     e.stopPropagation();
 
-    // 恢复过渡动画
+    // Restore transitions
     if (this.ballElement) {
       this.ballElement.style.transition = FLOATING_BALL_STYLES.transition;
     }
@@ -1022,69 +1022,69 @@ export class FloatingBallManager {
     const wasDragging = this.state.isDragging;
 
     if (wasDragging) {
-      // 最终校准位置
+      // Final calibration
       this.calibratePosition();
 
-      // 防抖保存位置到存储
+      // Save the position (debounced)
       this.debouncedSavePosition();
     }
 
-    // 重置所有拖拽相关状态
+    // Reset every drag state
     this.state.isDragging = false;
-    this.dragStartY = 0; // 关键：重置拖拽起始点
+    this.dragStartY = 0; // reset the drag start point
     this.ballStartY = 0;
 
-    // 如果刚完成拖拽，短暂延迟后允许点击事件
+    // After a drag, wait briefly before allowing clicks
     if (wasDragging) {
-      // 设置标记防止立即触发点击
+      // Flag that prevents an immediate click
       this.lastClickTime = Date.now();
     }
   }
 
   /**
-   * 触摸开始处理（独立实现，避免与鼠标事件冲突）
+   * Touch start handling (separate from mouse events to avoid clashes)
    */
   private handleTouchStart(e: TouchEvent): void {
-    // 确保是触摸设备并且只有一个触摸点
+    // Touch device with exactly one touch point
     if (e.touches.length !== 1) return;
 
-    // 检查触摸点是否在悬浮球上
+    // Check whether the touch is on the ball
     if (this.ballElement) {
       const touch = e.touches[0];
       const ballRect = this.ballElement.getBoundingClientRect();
 
-      // 判断触摸点是否在悬浮球范围内
+      // Is the touch within the ball?
       const isTouchOnBall =
         touch.clientX >= ballRect.left &&
         touch.clientX <= ballRect.right &&
         touch.clientY >= ballRect.top &&
         touch.clientY <= ballRect.bottom;
 
-      // 只有当触摸点确实在悬浮球上时，才处理触摸事件
+      // Only handle touches that are actually on the ball
       if (isTouchOnBall) {
-        // 阻止默认行为，但仅在悬浮球范围内
+        // Prevent default behaviour, but only on the ball
         e.preventDefault();
         e.stopPropagation();
 
-        // 记录起始位置，用于判断是点击还是拖动
+        // Record the start position to tell taps from drags
         this.state.isDragging = false;
         this.dragStartY = touch.clientY;
-        this.lastClickTime = Date.now(); // 更新点击时间，用于检测点击事件
+        this.lastClickTime = Date.now(); // used to detect taps
 
-        // 记录当前实际位置（像素值）
+        // Record the current position in pixels
         const rect = this.ballElement.getBoundingClientRect();
-        this.ballStartY = rect.top + rect.height / 2; // 球心的实际Y坐标
+        this.ballStartY = rect.top + rect.height / 2; // y of the ball's centre
 
-        // 添加视觉反馈，表示可拖动状态
+        // Visual feedback that the ball can be dragged
         this.ballElement.style.transform = 'translateY(-50%) scale(1.05)';
 
-        // 禁用过渡动画，防止拖拽时的干扰
+        // Disable transitions so they do not interfere with dragging
         this.ballElement.style.transition = 'none';
 
-        // 显示菜单（在触摸设备上，让菜单在点击时显示）
+        // Show the menu (on touch devices the menu shows on tap)
         this.showMenuOnHover();
       } else {
-        // 如果触摸点不在悬浮球上，确保重置状态
+        // Touch not on the ball: make sure the state is reset
         this.dragStartY = 0;
         this.ballStartY = 0;
       }
@@ -1092,53 +1092,53 @@ export class FloatingBallManager {
   }
 
   /**
-   * 触摸移动处理（独立实现）
+   * Touch move handling
    */
   private handleTouchMove(e: TouchEvent): void {
     if (!this.ballElement || e.touches.length !== 1) return;
 
-    // 只有当我们确认是在拖动悬浮球时才阻止默认行为
-    // 这样可以让页面其他区域正常滚动
+    // Only prevent default behaviour once we know the ball is being dragged,
+    // so the rest of the page still scrolls
     if (this.dragStartY !== 0) {
       const touch = e.touches[0];
 
-      // 如果已经开始拖拽或者移动距离超过阈值，则设置拖拽状态
+      // Mark as dragging once started or past the threshold
       const deltaY = Math.abs(touch.clientY - this.dragStartY);
-      // 使用更小的阈值，使拖动更灵敏
+      // A smaller threshold makes dragging more responsive
       const dragThreshold = Math.min(DRAG_CONFIG.threshold, 5);
 
       if (deltaY > dragThreshold) {
-        // 只有确认是悬浮球拖动时才阻止页面默认行为
+        // Only block the page's default behaviour while dragging the ball
         e.preventDefault();
         e.stopPropagation();
         this.state.isDragging = true;
       }
 
-      // 一旦开始拖拽，持续更新位置
-      // 使用与鼠标事件相同的位置计算逻辑
+      // Keep updating the position while dragging,
+      // using the same calculation as mouse events
       const currentY = touch.clientY;
       const windowHeight = window.innerHeight;
       const ballSize = FLOATING_BALL_STYLES.size;
 
-      // 计算新的球心位置（视口坐标系）
+      // New centre position (viewport coordinates)
       const moveY = currentY - this.dragStartY;
       const newPixelY = this.ballStartY + moveY;
 
-      // 确保球不会超出可视区域边界
+      // Keep the ball inside the viewport
       const minPixelY = ballSize / 2;
       const maxPixelY = windowHeight - ballSize / 2;
       const clampedPixelY = Math.max(minPixelY, Math.min(maxPixelY, newPixelY));
 
-      // 转换为百分比
+      // Convert to a percentage
       const newPositionPercent = (clampedPixelY / windowHeight) * 100;
 
-      // 再次限制在配置范围内
+      // Clamp to the configured range
       const finalPosition = Math.max(
         DRAG_CONFIG.minPosition,
         Math.min(DRAG_CONFIG.maxPosition, newPositionPercent),
       );
 
-      // 验证位置有效性
+      // Validate the position
       if (this.isValidPosition(finalPosition)) {
         this.config.position = finalPosition;
         this.state.currentPosition = finalPosition;
@@ -1148,54 +1148,54 @@ export class FloatingBallManager {
   }
 
   /**
-   * 触摸结束处理（独立实现）
+   * Touch end handling
    */
   private handleTouchEnd(e: TouchEvent): void {
-    // 检查是否是悬浮球上的点击/拖动
+    // Was this a tap or a drag on the ball?
     const touchOnBall = this.dragStartY !== 0;
 
     if (touchOnBall) {
       e.preventDefault();
       e.stopPropagation();
 
-      // 恢复过渡动画
+      // Restore transitions
       if (this.ballElement) {
         this.ballElement.style.transition = FLOATING_BALL_STYLES.transition;
 
-        // 恢复正常大小
+        // Restore normal size
         this.ballElement.style.transform = 'translateY(-50%) scale(1)';
       }
 
       const wasDragging = this.state.isDragging;
 
-      // 如果确实拖动了悬浮球，保存新位置
+      // If the ball was dragged, save the new position
       if (wasDragging) {
-        // 最终校准位置
+        // Final calibration
         this.calibratePosition();
 
-        // 防抖保存位置到存储
+        // Save the position (debounced)
         this.debouncedSavePosition();
       } else {
-        // 如果没有拖动（即只是点击），则触发翻译
+        // No drag (just a tap): translate
         const currentTime = Date.now();
         const timeDiff = currentTime - this.lastClickTime;
 
-        // 短触摸时间视为点击，触发翻译
+        // A short touch counts as a tap
         if (timeDiff < 300) {
-          // 模拟点击事件
+          // Simulate a click
           this.handleTranslate();
         }
       }
     }
 
-    // 无论如何都重置拖拽状态，确保干净的状态机
+    // Always reset drag state so the state machine stays clean
     this.state.isDragging = false;
     this.dragStartY = 0;
     this.ballStartY = 0;
   }
 
   /**
-   * 防抖保存位置
+   * Saves the position (debounced)
    */
   private debouncedSavePosition(): void {
     if (this.savePositionTimer) {
@@ -1204,11 +1204,11 @@ export class FloatingBallManager {
 
     this.savePositionTimer = window.setTimeout(() => {
       this.savePosition();
-    }, 300); // 300ms 防抖
+    }, 300); // 300 ms debounce
   }
 
   /**
-   * 保存位置到存储
+   * Saves the position to storage
    */
   private async savePosition(): Promise<void> {
     try {
@@ -1218,53 +1218,53 @@ export class FloatingBallManager {
       settings.floatingBall.position = this.config.position;
       await storageService.saveUserSettings(settings);
     } catch (error) {
-      console.error('保存悬浮球位置失败:', error);
+      console.error('Failed to save the floating ball position:', error);
     }
   }
 
   /**
-   * 鼠标悬停或触摸时显示菜单
+   * Shows the menu on hover or touch
    */
   private showMenuOnHover(): void {
-    // 清除隐藏定时器
+    // Clear the hide timer
     if (this.menuHoverTimer) {
       clearTimeout(this.menuHoverTimer);
       this.menuHoverTimer = null;
     }
 
-    // 立即显示菜单
+    // Show the menu immediately
     if (!this.state.isMenuExpanded) {
       this.state.isMenuExpanded = true;
 
-      // 确保菜单位置正确
+      // Make sure the menu is positioned correctly
       this.updateMenuStyle();
 
-      // 只在第一次显示时绑定事件监听器
+      // Bind listeners the first time only
       if (!this.menuItemsEventsBound) {
         this.bindMenuItemListeners();
         this.menuItemsEventsBound = true;
       }
 
-      // 在触摸设备上，延迟自动关闭菜单
+      // On touch devices, close the menu automatically after a delay
       if (this.isTouchDevice) {
         this.menuHoverTimer = window.setTimeout(() => {
           this.hideMenuOnLeave();
           this.menuHoverTimer = null;
-        }, 3000); // 3秒后自动关闭
+        }, 3000); // close after 3 seconds
       }
     }
   }
 
   /**
-   * 鼠标离开时隐藏菜单（带延迟）
+   * Hides the menu (with a delay) when the pointer leaves
    */
   private hideMenuOnLeave(): void {
-    // 清除之前的定时器
+    // Clear any previous timer
     if (this.menuHoverTimer) {
       clearTimeout(this.menuHoverTimer);
     }
 
-    // 延迟300ms隐藏菜单，给用户时间移动到菜单上
+    // Wait 300 ms so the user can move onto the menu
     this.menuHoverTimer = window.setTimeout(() => {
       if (this.state.isMenuExpanded) {
         this.state.isMenuExpanded = false;
@@ -1275,13 +1275,13 @@ export class FloatingBallManager {
   }
 
   /**
-   * 切换菜单展开/收起状态
+   * Toggles the menu
    */
   private toggleMenu(): void {
     this.state.isMenuExpanded = !this.state.isMenuExpanded;
     this.updateMenuStyle();
 
-    // 添加全局点击监听器以关闭菜单
+    // Close the menu on any outside click
     if (this.state.isMenuExpanded) {
       this.bindEventListener(
         document,
@@ -1290,7 +1290,7 @@ export class FloatingBallManager {
         true,
       );
 
-      // 只在第一次显示时绑定事件监听器
+      // Bind listeners the first time only
       if (!this.menuItemsEventsBound) {
         this.bindMenuItemListeners();
         this.menuItemsEventsBound = true;
@@ -1299,14 +1299,14 @@ export class FloatingBallManager {
   }
 
   /**
-   * 处理文档点击事件（用于关闭菜单）
+   * Handles document clicks (to close the menu)
    */
   private handleDocumentClick(e: MouseEvent): void {
     if (!this.ballElement || !this.menuContainer) return;
 
     const target = e.target as HTMLElement;
 
-    // 如果点击的是悬浮球或菜单内部，则不关闭菜单
+    // Clicks on the ball or inside the menu keep it open
     if (
       this.ballElement.contains(target) ||
       this.menuContainer.contains(target)
@@ -1314,7 +1314,7 @@ export class FloatingBallManager {
       return;
     }
 
-    // 关闭菜单
+    // Close the menu
     if (this.state.isMenuExpanded) {
       this.state.isMenuExpanded = false;
       this.updateMenuStyle();
@@ -1322,16 +1322,16 @@ export class FloatingBallManager {
   }
 
   /**
-   * 处理菜单操作
+   * Handles a menu action
    */
   private handleMenuAction(action: FloatingBallActionType): void {
-    // 清理悬停定时器
+    // Clear hover timers
     if (this.menuHoverTimer) {
       clearTimeout(this.menuHoverTimer);
       this.menuHoverTimer = null;
     }
 
-    // 先关闭菜单
+    // Close the menu first
     this.state.isMenuExpanded = false;
     this.updateMenuStyle();
 
@@ -1351,38 +1351,38 @@ export class FloatingBallManager {
         this.openOptions();
         break;
       default:
-        console.warn('未知的菜单操作:', action);
+        console.warn('Unknown menu action:', action);
     }
   }
 
   /**
-   * 打开设置页面
+   * Opens settings
    */
   private openSettings(): void {
     try {
-      // 使用扩展 API 打开 popup
+      // Open the popup through the extension API
       browser.runtime.sendMessage({ type: 'open-popup' });
     } catch (error) {
-      console.error('打开设置失败:', error);
+      console.error('Failed to open settings:', error);
     }
   }
 
   /**
-   * 打开选项页面
+   * Opens the options page
    */
   private openOptions(): void {
     try {
       browser.runtime.sendMessage({ type: 'open-options' });
     } catch (error) {
-      console.error('打开选项失败:', error);
+      console.error('Failed to open options:', error);
     }
   }
 
   /**
-   * 关闭悬浮球
+   * Closes the floating ball
    */
   private closeBall(): void {
-    // 清理所有定时器
+    // Clear every timer
     if (this.menuHoverTimer) {
       clearTimeout(this.menuHoverTimer);
       this.menuHoverTimer = null;
@@ -1392,11 +1392,11 @@ export class FloatingBallManager {
       this.clickDebounceTimer = null;
     }
 
-    // 重置菜单状态
+    // Reset menu state
     this.state.isMenuExpanded = false;
     this.menuItemsEventsBound = false;
 
-    // 隐藏元素
+    // Hide the elements
     this.state.isVisible = false;
     if (this.ballElement) {
       this.ballElement.style.display = 'none';
@@ -1407,7 +1407,7 @@ export class FloatingBallManager {
   }
 
   /**
-   * 绑定菜单项事件监听器
+   * Binds menu item event listeners
    */
   private bindMenuItemListeners(): void {
     if (!this.menuContainer) return;
@@ -1426,40 +1426,40 @@ export class FloatingBallManager {
   }
 
   /**
-   * 获取当前状态
+   * Current state
    */
   getState(): FloatingBallState {
     return { ...this.state };
   }
 
   /**
-   * 更新翻译状态指示
+   * Updates the translation state indicator.
    *
-   * 提供平滑的视觉过渡效果：
-   * 1. 悬浮球缩小 (0.1s)
-   * 2. 更新图标和提示文本
-   * 3. 悬浮球恢复大小 (0.1s)
+   * Smooth visual transition:
+   * 1. shrink the ball (0.1 s)
+   * 2. update the icon and tooltip
+   * 3. restore the ball's size (0.1 s)
    *
-   * 性能优化：
-   * - 使用requestAnimationFrame确保动画流畅
-   * - 一次性更新所有需要变更的属性
+   * Performance:
+   * - requestAnimationFrame keeps the animation smooth
+   * - every changed property is updated at once
    */
   updateTranslationStateIndicator(): void {
     if (!this.ballElement) return;
 
-    // 开始缩放动画
+    // Start the scale animation
     this.startTransitionAnimation();
 
-    // 延迟更新内容，创造平滑的过渡效果
+    // Update the content after a delay for a smooth transition
     setTimeout(() => {
       this.updateBallContent();
-      this.updateMenuItemPositions(); // 同步更新面板状态
+      this.updateMenuItemPositions(); // keep the panel state in sync
       this.endTransitionAnimation();
     }, 100);
   }
 
   /**
-   * 开始过渡动画
+   * Starts the transition
    * @private
    */
   private startTransitionAnimation(): void {
@@ -1470,21 +1470,21 @@ export class FloatingBallManager {
   }
 
   /**
-   * 更新悬浮球内容
+   * Updates the ball's content
    * @private
    */
   private updateBallContent(): void {
     if (!this.ballElement) return;
 
-    // 更新图标 - 使用安全的HTML设置方法
+    // Update the icon using the safe HTML setter
     safeSetInnerHTML(this.ballElement, this.createBallIcon());
 
-    // 更新提示文本
+    // Update the tooltip
     this.updateTooltipText();
   }
 
   /**
-   * 结束过渡动画
+   * Ends the transition
    * @private
    */
   private endTransitionAnimation(): void {
@@ -1494,26 +1494,26 @@ export class FloatingBallManager {
   }
 
   /**
-   * 更新提示文本
+   * Updates the tooltip text
    * @private
    */
   private updateTooltipText(): void {
     if (!this.ballElement) return;
 
-    // 检查翻译状态
+    // Check translation state
     const hasTranslatedContent = this.hasTranslatedContent();
     const isTranslationHidden = document.body.classList.contains(
       'wxt-translation-hidden',
     );
 
-    // 确定提示文本
+    // Pick the tooltip text
     let modeText;
     if (!hasTranslatedContent) {
-      modeText = '准备翻译';
+      modeText = 'Ready to translate';
     } else if (isTranslationHidden) {
-      modeText = '原文模式';
+      modeText = 'Showing original';
     } else {
-      modeText = '翻译模式';
+      modeText = 'Showing translation';
     }
 
     this.ballElement.title = `${modeText}`;
@@ -1527,10 +1527,10 @@ export class FloatingBallManager {
   }
 
   /**
-   * 显示通知消息
+   * Shows a notification message
    */
   private showNotification(message: string): void {
-    // 创建简单的通知提示
+    // Simple notification toast
     const notification = document.createElement('div');
     notification.style.cssText = `
       position: fixed;
@@ -1551,12 +1551,12 @@ export class FloatingBallManager {
 
     document.body.appendChild(notification);
 
-    // 显示动画
+    // Show animation
     setTimeout(() => {
       notification.style.opacity = '1';
     }, 10);
 
-    // 3秒后自动消失
+    // Hide after 3 seconds
     setTimeout(() => {
       notification.style.opacity = '0';
       setTimeout(() => {
@@ -1568,16 +1568,16 @@ export class FloatingBallManager {
   }
 
   /**
-   * 销毁悬浮球（完整资源清理）
+   * Destroys the floating ball and releases every resource
    */
   destroy(): void {
-    // 移除悬浮球元素
+    // Remove the ball element
     if (this.ballElement) {
       this.ballElement.remove();
       this.ballElement = null;
     }
 
-    // 移除菜单容器
+    // Remove the menu container
     if (this.menuContainer) {
       this.menuContainer.remove();
       this.menuContainer = null;
@@ -1589,10 +1589,10 @@ export class FloatingBallManager {
       this.uiRoot = null;
     }
 
-    // 清理所有事件监听器
+    // Remove every event listener
     this.removeAllEventListeners();
 
-    // 清理所有定时器
+    // Clear every timer
     if (this.savePositionTimer) {
       clearTimeout(this.savePositionTimer);
       this.savePositionTimer = null;
@@ -1608,7 +1608,7 @@ export class FloatingBallManager {
       this.menuHoverTimer = null;
     }
 
-    // 重置状态
+    // Reset state
     this.state = {
       isDragging: false,
       isVisible: false,
@@ -1616,7 +1616,7 @@ export class FloatingBallManager {
       currentPosition: 50,
     };
 
-    // 重置其他属性
+    // Reset other properties
     this.dragStartY = 0;
     this.ballStartY = 0;
     this.lastClickTime = 0;

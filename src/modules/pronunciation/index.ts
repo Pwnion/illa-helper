@@ -1,27 +1,27 @@
 /**
- * Pronunciation 模块主入口
- * 提供统一的API接口
+ * Pronunciation module entry point,
+ * exposing a single API surface
  */
 
-// 核心服务
+// Core service
 export { PronunciationService } from './services/PronunciationService';
 
-// 配置
+// Configuration
 export * from './config';
 
-// 类型定义
+// Types
 export * from './types';
 
-// 提供者 (按功能模块导出)
+// Providers, grouped by feature
 export * from './phonetic';
 export * from './tts';
 export * from './translation';
 
-// 工具类
+// Utilities
 export * from './utils';
 
-// UI组件
+// UI
 export * from './ui';
 
-// 默认导出主服务
+// Default export: the main service
 export { PronunciationService as default } from './services/PronunciationService';

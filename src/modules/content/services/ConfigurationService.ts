@@ -10,7 +10,7 @@ import { languageService } from '@/src/modules/core/translation/LanguageService'
 import { IConfigurationService } from '../types';
 
 /**
- * 配置管理服务 - 负责处理用户设置和API配置
+ * Configuration service: user settings and API configuration
  */
 export class ConfigurationService implements IConfigurationService {
   private storageService: StorageService;
@@ -20,14 +20,14 @@ export class ConfigurationService implements IConfigurationService {
   }
 
   /**
-   * 获取用户设置
+   * Loads the user settings
    */
   async getUserSettings(): Promise<UserSettings> {
     return await this.storageService.getUserSettings();
   }
 
   /**
-   * 创建替换配置对象
+   * Builds the replacement configuration
    */
   createReplacementConfig(
     settings: UserSettings,
@@ -38,7 +38,7 @@ export class ConfigurationService implements IConfigurationService {
       pageLanguage,
     );
 
-    // 获取当前活跃的API配置
+    // The currently active API configuration
     const activeConfig = effectiveSettings.apiConfigs.find(
       (config) => config.id === effectiveSettings.activeApiConfigId,
     );
@@ -63,7 +63,7 @@ export class ConfigurationService implements IConfigurationService {
   }
 
   /**
-   * 根据最新设置更新所有相关模块的配置
+   * Pushes the latest settings to every module that depends on them
    */
   updateConfiguration(
     settings: UserSettings,
@@ -73,7 +73,7 @@ export class ConfigurationService implements IConfigurationService {
   ): void {
     styleManager.setTranslationStyle(settings.translationStyle);
 
-    // 如果是自定义样式，应用自定义CSS
+    // Apply custom CSS when the custom style is selected
     if (settings.translationStyle === TranslationStyle.CUSTOM) {
       styleManager.setCustomCSS(settings.customTranslationCSS);
     }
@@ -84,7 +84,7 @@ export class ConfigurationService implements IConfigurationService {
   }
 
   /**
-   * 获取活跃的API配置
+   * Returns the active API configuration
    */
   getActiveApiConfig(settings: UserSettings) {
     return settings.apiConfigs.find(

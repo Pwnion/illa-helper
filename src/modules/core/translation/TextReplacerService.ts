@@ -1,15 +1,15 @@
 /**
- * 文本替换服务
- * 负责根据用户设置替换文本中的词汇，支持智能模式和传统模式
+ * Text replacement service:
+ * replaces words in text according to the user's settings
  */
 
 import { ApiServiceFactory } from '../../api';
 import { StyleManager } from '../../styles';
 
-// 替换结果接口
+// Replacement result
 export interface ReplacementResult {
-  original: string; // 原始文本
-  replaced: string; // 替换后的文本
+  original: string; // source text
+  replaced: string; // text after replacement
   replacedWords: Array<{
     chinese: string;
     english: string;
@@ -17,11 +17,11 @@ export interface ReplacementResult {
       start: number;
       end: number;
     };
-    isNew: boolean; // 是否是生词
+    isNew: boolean; // whether the word is new to the learner
   }>;
 }
 
-// 缓存键接口
+// Cache key
 interface CacheKey {
   text: string;
   sourceLanguage?: string;
@@ -30,7 +30,7 @@ interface CacheKey {
   replacementRate: number;
 }
 
-// 缓存统计信息
+// Cache statistics
 export interface CacheStats {
   cacheSize: number;
 }
@@ -42,24 +42,24 @@ import { UserSettings } from '../../shared/types/storage';
 import { TranslationStyle } from '../../shared/types/core';
 
 /**
- * 文本替换服务类
- * 采用单例模式，提供统一的文本替换功能
+ * Text replacement service
+ * (singleton)
  */
 export class TextReplacerService {
-  // 单例实例
+  // Singleton instance
   private static instance: TextReplacerService | null = null;
 
-  // 缓存配置常量
+  // Cache settings
   private static readonly CACHE_MAX_SIZE = 100;
   private static readonly CACHE_CLEANUP_BATCH = 20;
 
-  // 服务组件
+  // Components
   public readonly styleManager: StyleManager;
   private config: ReplacementConfig;
   private cache: Map<string, FullTextAnalysisResponse>;
 
   /**
-   * 私有构造函数，确保单例模式
+   * Private constructor (singleton)
    */
   private constructor(config: ReplacementConfig) {
     this.config = config;
@@ -69,12 +69,14 @@ export class TextReplacerService {
   }
 
   /**
-   * 获取服务实例（单例模式）
+   * Returns the singleton instance
    */
   public static getInstance(config?: ReplacementConfig): TextReplacerService {
     if (!TextReplacerService.instance) {
       if (!config) {
-        throw new Error('首次创建TextReplacerService实例时必须提供配置');
+        throw new Error(
+          'A configuration is required when first creating TextReplacerService',
+        );
       }
       TextReplacerService.instance = new TextReplacerService(config);
     }
@@ -82,14 +84,14 @@ export class TextReplacerService {
   }
 
   /**
-   * 重置服务实例（主要用于测试）
+   * Resets the instance (mainly for tests)
    */
   public static resetInstance(): void {
     TextReplacerService.instance = null;
   }
 
   /**
-   * 初始化样式管理器
+   * Initialises the style manager
    */
   private initializeStyleManager(): void {
     const translationStyle =
@@ -98,8 +100,8 @@ export class TextReplacerService {
   }
 
   /**
-   * 更新服务配置
-   * @param config 新的配置（部分更新）
+   * Updates the service configuration
+   * @param config partial configuration
    */
   public updateConfig(config: Partial<ReplacementConfig>): void {
     this.config = { ...this.config, ...config };
@@ -110,36 +112,36 @@ export class TextReplacerService {
   }
 
   /**
-   * 获取当前配置
+   * Current configuration
    */
   public getConfig(): ReplacementConfig {
     return { ...this.config };
   }
 
   /**
-   * 替换文本中的词汇
-   * @param text 原始文本
-   * @returns 替换结果
+   * Replaces words in the text
+   * @param text source text
+   * @returns replacement result
    */
   public async replaceText(text: string): Promise<FullTextAnalysisResponse> {
     try {
-      // 如果不使用API，直接返回原文
+      // Without the API, return the text unchanged
       if (!this.config.useGptApi) {
         return this.createEmptyResult(text);
       }
 
       const settingsForApi = this.buildUserSettings();
 
-      // 处理翻译
+      // Translate
       return await this.processTranslation(text, settingsForApi);
     } catch (error) {
-      console.error('文本替换失败:', error);
+      console.error('Text replacement failed:', error);
       return this.createEmptyResult(text);
     }
   }
 
   /**
-   * 创建空的替换结果
+   * Creates an empty replacement result
    */
   private createEmptyResult(text: string): FullTextAnalysisResponse {
     return {
@@ -150,7 +152,7 @@ export class TextReplacerService {
   }
 
   /**
-   * 构建API调用的用户设置
+   * Builds user settings for the API call
    */
   private buildUserSettings(): UserSettings {
     return {
@@ -163,40 +165,40 @@ export class TextReplacerService {
   }
 
   /**
-   * 统一的翻译处理方法
-   * @param text 原始文本
-   * @param settings 用户设置
-   * @returns 翻译结果
+   * Translation entry point
+   * @param text source text
+   * @param settings user settings
+   * @returns translation result
    */
   private async processTranslation(
     text: string,
     settings: UserSettings,
   ): Promise<FullTextAnalysisResponse> {
-    // 生成缓存键
+    // Build the cache key
     const cacheKey = this.generateCacheKey(text, settings);
 
-    // 检查缓存
+    // Check the cache
     const cachedResult = this.getCachedResult(cacheKey);
     if (cachedResult) {
       return cachedResult;
     }
 
     try {
-      // 获取API结果
+      // Fetch from the API
       const apiResult = await this.callTranslationAPI(text, settings);
 
-      // 存入缓存
+      // Cache the result
       this.setCachedResult(cacheKey, apiResult);
 
       return apiResult;
     } catch (error) {
-      console.error('翻译失败:', error);
+      console.error('Translation failed:', error);
       return await this.handleTranslationError(text, settings, error);
     }
   }
 
   /**
-   * 调用翻译API
+   * Calls the translation API
    */
   private async callTranslationAPI(
     text: string,
@@ -205,35 +207,35 @@ export class TextReplacerService {
     const activeConfig = this.config.activeApiConfig;
 
     if (!activeConfig) {
-      throw new Error('没有找到活跃的API配置');
+      throw new Error('No active API configuration found');
     }
 
-    // 使用工厂方法创建正确的提供商实例
+    // Create the right provider with the factory
     const translationProvider = ApiServiceFactory.createProvider(activeConfig);
 
-    // 调用API进行翻译
+    // Call the API
     return await translationProvider.analyzeFullText(text, settings);
   }
 
   /**
-   * 处理翻译错误 - 简化版本
+   * Handles translation errors
    */
   private async handleTranslationError(
     text: string,
     settings: UserSettings,
     error: any,
   ): Promise<FullTextAnalysisResponse> {
-    console.log('翻译失败，返回原文:', error);
+    console.log('Translation failed, returning the original text:', error);
 
-    // 简化后不再有降级逻辑，直接返回原文
+    // There is no fallback; return the original text
     return this.createEmptyResult(text);
   }
 
   /**
-   * 生成缓存键
-   * @param text 文本
-   * @param settings 设置
-   * @returns 缓存键字符串
+   * Builds the cache key
+   * @param text text
+   * @param settings settings
+   * @returns cache key
    */
   private generateCacheKey(text: string, settings: UserSettings): string {
     const targetLanguage = settings.multilingualConfig.targetLanguage;
@@ -249,7 +251,7 @@ export class TextReplacerService {
   }
 
   /**
-   * 生成缓存键的哈希值
+   * Hashes the cache key
    */
   private hashCacheKey(keyData: CacheKey): string {
     const str = JSON.stringify(keyData);
@@ -257,22 +259,22 @@ export class TextReplacerService {
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
       hash = (hash << 5) - hash + char;
-      hash = hash & hash; // 转换为32位整数
+      hash = hash & hash; // force a 32-bit integer
     }
     return Math.abs(hash).toString(36);
   }
 
-  // ==================== 缓存管理方法 ====================
+  // ==================== Cache management ====================
 
   /**
-   * 获取缓存结果
+   * Reads a cached result
    */
   private getCachedResult(cacheKey: string): FullTextAnalysisResponse | null {
     return this.cache.get(cacheKey) || null;
   }
 
   /**
-   * 设置缓存结果
+   * Writes a cached result
    */
   private setCachedResult(
     cacheKey: string,
@@ -283,7 +285,7 @@ export class TextReplacerService {
   }
 
   /**
-   * 清理过期缓存
+   * Removes expired cache entries
    */
   private cleanupCache(): void {
     if (this.cache.size > TextReplacerService.CACHE_MAX_SIZE) {
@@ -297,13 +299,13 @@ export class TextReplacerService {
         this.cache.delete(keys[i]);
       }
 
-      console.log(`缓存清理：删除了 ${deleteCount} 个条目`);
+      console.log(`Cache cleanup: removed ${deleteCount} entries`);
     }
   }
 
   /**
-   * 获取缓存统计信息
-   * @returns 缓存统计
+   * Cache statistics
+   * @returns statistics
    */
   public getCacheStats(): CacheStats {
     return {
@@ -312,34 +314,34 @@ export class TextReplacerService {
   }
 
   /**
-   * 清空所有缓存
+   * Clears the whole cache
    */
   public clearAllCache(): void {
     this.cache.clear();
-    console.log('所有缓存已清空');
+    console.log('Cache cleared');
   }
 
-  // ==================== 服务生命周期方法 ====================
+  // ==================== Service lifecycle ====================
 
   /**
-   * 初始化服务
+   * Initialises the service
    */
   public async initialize(): Promise<void> {
-    // 预热缓存或其他初始化操作
-    console.log('TextReplacerService 已初始化');
+    // Warm the cache or other initialisation
+    console.log('TextReplacerService initialised');
   }
 
   /**
-   * 销毁服务资源
+   * Releases resources
    */
   public dispose(): void {
     this.clearAllCache();
-    // 其他清理操作
-    console.log('TextReplacerService 资源已清理');
+    // Other cleanup
+    console.log('TextReplacerService resources released');
   }
 }
 
-// 导出服务实例获取器（简化外部使用）
+// Convenience accessor
 export const getTextReplacerService = (config?: ReplacementConfig) => {
   return TextReplacerService.getInstance(config);
 };

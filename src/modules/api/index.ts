@@ -1,11 +1,11 @@
 /**
- * API 模块统一导出
+ * API module exports
  */
 
-// 类型和接口
+// Types and interfaces
 export { ITranslationProvider } from './types';
 
-// 工厂和服务
+// Factory and services
 export { ApiServiceFactory } from './factory/ApiServiceFactory';
 export {
   UniversalApiService,
@@ -16,13 +16,13 @@ export {
   type UniversalApiResult,
 } from './services/UniversalApiService';
 
-// 提供者
+// Providers
 export { GoogleGeminiProvider, OpenAIProvider } from './providers';
 
-// 基础类
+// Base class
 export { BaseProvider } from './base/BaseProvider';
 
-// 工具函数
+// Helpers
 export {
   mergeCustomParams,
   createErrorResponse,

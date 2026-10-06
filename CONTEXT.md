@@ -1,61 +1,61 @@
 # ILLA Helper
 
-这是一个浏览器扩展上下文，目标是在不破坏网页浏览体验的前提下，把网页内容转化为语言学习输入。这里的核心概念不是底层服务类，而是用户真正感知到并依赖的学习路径和配置对象。
+A browser extension that turns web pages into language learning input without breaking normal browsing. The core concepts here are not the underlying service classes but the learning paths and configuration objects users actually see and rely on.
 
 ## Language
 
-**用户设置**:
-扩展的唯一持久化配置对象，定义翻译、发音、网站规则和 API 行为。它是运行时配置的唯一真相源。
-_Avoid_: 局部设置, 临时配置, 旧版配置
+**User settings**:
+The extension's only persisted configuration object. It defines translation, pronunciation, website rules and API behaviour, and is the single source of truth for runtime configuration.
+_Avoid_: partial settings, temporary config, legacy config
 
-**API 配置**:
-用户设置中的一个可切换服务连接项，包含协议族、端点、模型和请求参数。它是“扩展如何调用外部大模型服务”的用户级定义。
-_Avoid_: 渠道, 节点, 平台配置
+**API configuration**:
+A switchable service connection in the user settings, made up of a protocol family, endpoint, model and request parameters. It is the user-level definition of how the extension calls an external LLM.
+_Avoid_: channel, node, platform config
 
-**自定义提供商**:
-一种用户可配置的 OpenAI 兼容接口，而不是任意协议的占位符。它允许用户自填端点和模型，但必须复用 OpenAI 兼容请求链路。
-_Avoid_: 任意自定义协议, 万能 provider, 预留扩展点
+**Custom provider**:
+A user-configured OpenAI-compatible endpoint, not a placeholder for arbitrary protocols. Users fill in the endpoint and model, but requests always go through the OpenAI-compatible path.
+_Avoid_: arbitrary custom protocol, catch-all provider, reserved extension point
 
-**OpenAI 兼容预设**:
-面向用户暴露的服务商快捷模板，例如 OpenAI、DeepSeek、SiliconFlow。它们只提供默认 endpoint 和 model，不代表不同的运行时协议类型。
-_Avoid_: 独立 provider 协议, 运行时分支类型
+**OpenAI-compatible preset**:
+A provider shortcut shown to users, such as OpenAI or Anthropic. Presets only supply a default endpoint and model; they are not separate runtime protocol types.
+_Avoid_: separate provider protocol, runtime branch type
 
-**协议族**:
-存储层和运行时真正承认的提供商类型边界，用来决定请求适配方式。当前只应保留少数明确类型，例如 `openai-compatible` 和 `gemini`。
-_Avoid_: 品牌名 provider, UI 预设名, 营销名称
+**Protocol family**:
+The provider type boundary recognised by storage and the runtime, which decides how requests are adapted. Only a few explicit types exist: `openai-compatible` and `gemini`.
+_Avoid_: brand-name provider, UI preset name, marketing name
 
-**提供商适配层**:
-把统一的 API 配置和统一的翻译意图转换成各家模型实际请求格式的边界层。它负责处理 OpenAI 兼容接口和 Gemini 的协议差异，但不拥有用户配置和界面逻辑。
-_Avoid_: 配置模型, 设置页逻辑, 存储结构
+**Provider adapter layer**:
+The boundary that turns a unified API configuration and translation intent into each provider's actual request format. It handles the differences between OpenAI-compatible endpoints and Gemini, but owns neither user configuration nor UI logic.
+_Avoid_: config model, settings page logic, storage structure
 
-**Gemini 网关模式**:
-Gemini 提供商的一种调用入口变体，允许通过自定义 endpoint 或代理网关访问 Gemini 能力。它属于 Gemini 适配层内部差异，不是独立的用户级 provider。
-_Avoid_: ProxyGemini provider, 独立服务商
+**Gemini gateway mode**:
+A variant of the Gemini provider that reaches Gemini through a custom endpoint or proxy gateway. It is an internal difference of the Gemini adapter, not a separate user-level provider.
+_Avoid_: ProxyGemini provider, separate provider
 
-**假支持**:
-界面、文案或配置中声称支持某个提供商，但运行时没有独立适配或没有清晰可用路径的状态。它应当被收口成“真正支持”或“明确下线”，不能继续留在系统里制造错误预期。
-_Avoid_: 预留选项, 先放着, 半支持
+**Fake support**:
+A state where the UI, copy or configuration claims a provider is supported but the runtime has no adapter or clear working path for it. It must be resolved into real support or explicit removal, not left to create false expectations.
+_Avoid_: reserved option, leave it for now, half-supported
 
-**Background API 请求**:
-所有 OpenAI 兼容 HTTP 请求统一由扩展 background 发起，避免 HTTPS 页面调用 HTTP 端点时触发 Mixed Content，也避免内容脚本里继续保留 CORS 分叉。
-_Avoid_: useBackgroundProxy 开关, 内容脚本直连 API
+**Background API request**:
+Every OpenAI-compatible HTTP request is made from the extension background, avoiding mixed content when HTTPS pages call HTTP endpoints and removing the CORS split in content scripts.
+_Avoid_: useBackgroundProxy toggle, direct API calls from content scripts
 
-**单词翻译**:
-在网页原文中按比例替换或插入目标语言词汇的翻译模式。它保留原网页结构，并以词或短语为最小学习单位。
-_Avoid_: 全文翻译, 段落翻译
+**Word translation**:
+A translation mode that replaces or inserts target-language words in the page text at a set ratio. It keeps the page structure and uses words or phrases as the smallest learning unit.
+_Avoid_: full translation, paragraph translation
 
-**段落翻译**:
-以段落为单位生成附加翻译内容的翻译模式。它不以内联词汇替换为核心，而是为段落追加独立的翻译结果。
-_Avoid_: 单词翻译, 逐词替换
+**Paragraph translation**:
+A translation mode that adds a translation for each paragraph. It does not replace text inline; each paragraph gets a separate translation.
+_Avoid_: word translation, word-by-word replacement
 
-**发音悬浮框**:
-附着在翻译结果上的交互式学习面板，用于显示音标、释义和朗读操作。它是用户进入发音学习链路的主要入口。
-_Avoid_: 提示框, tooltip 组件
+**Pronunciation tooltip**:
+The interactive learning panel attached to a translation, showing phonetics (English only), a meaning with learner grammar, and a speak button. It is the main entry point into pronunciation learning.
+_Avoid_: hint box, tooltip component
 
-**网站规则**:
-控制扩展在特定网站上是否生效的用户规则集合，包括黑名单和白名单语义。它决定内容脚本是否应该介入页面。
-_Avoid_: 黑名单存储, 旧站点配置
+**Website rules**:
+The user's rules controlling whether the extension acts on a site, with blacklist and whitelist semantics. They decide whether the content script engages with a page.
+_Avoid_: blacklist storage, legacy site config
 
-**受保护的用户路径**:
-重构期间必须保持可用的用户可见操作链路，包括 API 配置管理、单词翻译、段落翻译、发音悬浮框和网站规则生效。它是判断“是否允许删改内部实现”的唯一外部约束。
-_Avoid_: 保功能, 尽量不坏, 大体可用
+**Protected user paths**:
+The user-visible flows that must keep working during refactors: API configuration management, word translation, sentence translation, paragraph translation, the pronunciation tooltip and website rules. They are the only external constraint on whether internal implementation may be changed or removed.
+_Avoid_: keep features working, try not to break things, mostly works

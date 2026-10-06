@@ -1,22 +1,22 @@
 /**
- * DOM工具类
- * 提供DOM操作相关的工具方法
+ * DOM helpers
+ * for pronunciation elements
  */
 
 import { CSS_CLASSES } from '../config';
 
 export class DOMUtils {
   /**
-   * 生成唯一的元素ID
-   * @param prefix 前缀
+   * Generates a unique element ID
+   * @param prefix prefix
    */
   static generateUniqueId(prefix = 'wxt'): string {
     return `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
 
   /**
-   * 为元素添加唯一标识
-   * @param element 目标元素
+   * Adds a unique identifier to an element
+   * @param element target element
    */
   static addUniqueId(element: HTMLElement): string {
     let id = element.getAttribute('data-wxt-id');
@@ -28,16 +28,16 @@ export class DOMUtils {
   }
 
   /**
-   * 获取元素的唯一键
-   * @param element 目标元素
+   * Returns the element's unique key
+   * @param element target element
    */
   static getElementKey(element: HTMLElement): string {
     return element.getAttribute('data-wxt-id') || 'unknown';
   }
 
   /**
-   * 清理指定选择器的所有元素
-   * @param selector CSS选择器
+   * Removes every element matching a selector
+   * @param selector CSS selector
    */
   static cleanupElements(selector: string): void {
     const elements = document.querySelectorAll(selector);
@@ -51,8 +51,8 @@ export class DOMUtils {
   }
 
   /**
-   * 创建内联音标元素
-   * @param phoneticText 音标文本
+   * Creates an inline phonetic element
+   * @param phoneticText phonetic text
    */
   static createPhoneticInlineElement(phoneticText: string): HTMLElement {
     const phoneticSpan = document.createElement('span');
@@ -68,8 +68,8 @@ export class DOMUtils {
   }
 
   /**
-   * 提取单词列表
-   * @param text 文本
+   * Extracts a list of words
+   * @param text text
    */
   static extractWords(text: string): string[] {
     return text
@@ -81,18 +81,18 @@ export class DOMUtils {
   }
 
   /**
-   * 检查元素是否具有指定的CSS类
-   * @param element 目标元素
-   * @param className CSS类名
+   * Whether the element has a CSS class
+   * @param element target element
+   * @param className CSS class
    */
   static hasClass(element: HTMLElement, className: string): boolean {
     return element.classList.contains(className);
   }
 
   /**
-   * 安全地添加CSS类
-   * @param element 目标元素
-   * @param className CSS类名
+   * Adds a CSS class safely
+   * @param element target element
+   * @param className CSS class
    */
   static addClass(element: HTMLElement, className: string): void {
     if (!this.hasClass(element, className)) {
@@ -101,9 +101,9 @@ export class DOMUtils {
   }
 
   /**
-   * 安全地移除CSS类
-   * @param element 目标元素
-   * @param className CSS类名
+   * Removes a CSS class safely
+   * @param element target element
+   * @param className CSS class
    */
   static removeClass(element: HTMLElement, className: string): void {
     if (this.hasClass(element, className)) {
@@ -112,33 +112,33 @@ export class DOMUtils {
   }
 
   /**
-   * 切换CSS类
-   * @param element 目标元素
-   * @param className CSS类名
+   * Toggles a CSS class
+   * @param element target element
+   * @param className CSS class
    */
   static toggleClass(element: HTMLElement, className: string): boolean {
     return element.classList.toggle(className);
   }
 
   /**
-   * 安全地设置元素属性
-   * @param element 目标元素
-   * @param name 属性名
-   * @param value 属性值
+   * Sets an attribute safely
+   * @param element target element
+   * @param name attribute name
+   * @param value attribute value
    */
   static setAttribute(element: HTMLElement, name: string, value: string): void {
     try {
       element.setAttribute(name, value);
     } catch (e) {
-      console.warn(`设置属性失败: ${name}=${value}`, e);
+      console.warn(`Failed to set attribute: ${name}=${value}`, e);
     }
   }
 
   /**
-   * 安全地获取元素属性
-   * @param element 目标元素
-   * @param name 属性名
-   * @param defaultValue 默认值
+   * Reads an attribute safely
+   * @param element target element
+   * @param name attribute name
+   * @param defaultValue default value
    */
   static getAttribute(
     element: HTMLElement,
@@ -148,15 +148,15 @@ export class DOMUtils {
     try {
       return element.getAttribute(name) || defaultValue;
     } catch (e) {
-      console.warn(`获取属性失败: ${name}`, e);
+      console.warn(`Failed to read attribute: ${name}`, e);
       return defaultValue;
     }
   }
 
   /**
-   * 查找最近的具有指定类名的父元素
-   * @param element 起始元素
-   * @param className CSS类名
+   * Finds the closest ancestor with a CSS class
+   * @param element starting element
+   * @param className CSS class
    */
   static findClosestWithClass(
     element: HTMLElement,

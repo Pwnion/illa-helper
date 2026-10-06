@@ -1,13 +1,13 @@
 /**
- * 消息传递服务
- * 负责扩展内各部分之间的通信，支持标签页消息、后台脚本通信、右键菜单动作
+ * Messaging service.
+ * Handles communication between extension parts: tab messages, background messages and context menu actions.
  *
- * 功能特性：
- * - 标签页消息发送
- * - 后台脚本通信
- * - 右键菜单动作处理
- * - 消息监听和路由
- * - 错误处理和重试机制
+ * Features:
+ * - messages to tabs
+ * - messages to the background script
+ * - context menu actions
+ * - listener registration and routing
+ * - error handling and retries
  */
 
 import { browser } from 'wxt/browser';
@@ -27,23 +27,23 @@ import {
   NotificationMessage,
 } from './types';
 
-// ==================== 消息传递服务类 ====================
+// ==================== Messaging service ====================
 
 /**
- * 消息传递服务
- * 采用单例模式，提供统一的消息通信功能
+ * Messaging service
+ * (singleton)
  */
 export class MessagingService {
   private static instance: MessagingService;
 
-  // 配置和状态
+  // Configuration and state
   private readonly config: MessagingServiceConfig;
   private messageListeners: Map<string, MessageListener[]> = new Map();
   private messageHistory: Message[] = [];
   private maxHistorySize = 100;
 
   /**
-   * 私有构造函数，防止外部实例化
+   * Private constructor (singleton)
    */
   private constructor(config: MessagingServiceConfig = {}) {
     this.config = {
@@ -56,9 +56,9 @@ export class MessagingService {
   }
 
   /**
-   * 获取服务实例
-   * @param config 可选的服务配置
-   * @returns MessagingService 实例
+   * Returns the singleton instance
+   * @param config optional service configuration
+   * @returns MessagingService instance
    */
   public static getInstance(config?: MessagingServiceConfig): MessagingService {
     if (!MessagingService.instance) {
@@ -67,12 +67,12 @@ export class MessagingService {
     return MessagingService.instance;
   }
 
-  // ==================== 消息监听管理 ====================
+  // ==================== Listeners ====================
 
   /**
-   * 添加消息监听器
-   * @param messageType 消息类型
-   * @param listener 监听器函数
+   * Adds a message listener
+   * @param messageType message type
+   * @param listener listener
    */
   public addMessageListener(
     messageType: string,
@@ -85,9 +85,9 @@ export class MessagingService {
   }
 
   /**
-   * 移除消息监听器
-   * @param messageType 消息类型
-   * @param listener 监听器函数
+   * Removes a message listener
+   * @param messageType message type
+   * @param listener listener
    */
   public removeMessageListener(
     messageType: string,
@@ -103,15 +103,19 @@ export class MessagingService {
   }
 
   /**
-   * 处理接收到的消息
-   * @param message 消息对象
-   * @param sender 发送者信息
+   * Handles a received message
+   * @param message message
+   * @param sender sender information
    */
   private async handleMessage(message: Message, sender?: any): Promise<any> {
     this.addToHistory(message);
 
     if (this.config.enableLogging) {
-      console.log('[MessagingService] 接收消息:', message.type, message);
+      console.log(
+        '[MessagingService] Received message:',
+        message.type,
+        message,
+      );
     }
 
     const listeners = this.messageListeners.get(message.type);
@@ -120,11 +124,11 @@ export class MessagingService {
         listeners.map((listener) => listener(message, sender)),
       );
 
-      // 处理监听器执行结果
+      // Handle listener results
       results.forEach((result, index) => {
         if (result.status === 'rejected') {
           console.error(
-            `[MessagingService] 监听器 ${index} 执行失败:`,
+            `[MessagingService] Listener ${index} failed:`,
             result.reason,
           );
         }
@@ -135,8 +139,8 @@ export class MessagingService {
   }
 
   /**
-   * 添加消息到历史记录
-   * @param message 消息对象
+   * Adds a message to the history
+   * @param message message
    */
   private addToHistory(message: Message): void {
     message.timestamp = Date.now();
@@ -144,18 +148,18 @@ export class MessagingService {
 
     this.messageHistory.push(message);
 
-    // 保持历史记录大小限制
+    // Cap the history size
     if (this.messageHistory.length > this.maxHistorySize) {
       this.messageHistory.shift();
     }
   }
 
-  // ==================== 标签页通信 ====================
+  // ==================== Tab messaging ====================
 
   /**
-   * 查询标签页
-   * @param options 查询选项
-   * @returns 标签页数组
+   * Queries tabs
+   * @param options query options
+   * @returns tabs
    */
   private async queryTabs(options: TabQueryOptions = {}): Promise<any[]> {
     try {
@@ -165,17 +169,17 @@ export class MessagingService {
         ...options,
       });
     } catch (error) {
-      console.error('[MessagingService] 查询标签页失败:', error);
+      console.error('[MessagingService] Tab query failed:', error);
       return [];
     }
   }
 
   /**
-   * 发送消息到标签页
-   * @param tabId 标签页ID
-   * @param message 消息对象
-   * @param options 发送选项
-   * @returns 发送结果
+   * Sends a message to a tab
+   * @param tabId tab id
+   * @param message message
+   * @param options send options
+   * @returns send result
    */
   public async sendToTab(
     tabId: number,
@@ -186,26 +190,22 @@ export class MessagingService {
       const response = await browser.tabs.sendMessage(tabId, message);
 
       if (this.config.enableLogging) {
-        console.log(
-          '[MessagingService] 发送到标签页成功:',
-          tabId,
-          message.type,
-        );
+        console.log('[MessagingService] Sent to tab:', tabId, message.type);
       }
 
       return { success: true, response };
     } catch (error) {
-      const errorMessage = `发送消息到标签页 ${tabId} 失败: ${error}`;
+      const errorMessage = `Failed to send message to tab ${tabId}: ${error}`;
       console.error('[MessagingService]', errorMessage);
       return { success: false, error: errorMessage };
     }
   }
 
   /**
-   * 广播消息到所有活跃标签页
-   * @param message 消息对象
-   * @param options 发送选项
-   * @returns 发送结果数组
+   * Broadcasts a message to every active tab
+   * @param message message
+   * @param options send options
+   * @returns send results
    */
   public async broadcastToTabs(
     message: Message,
@@ -224,13 +224,13 @@ export class MessagingService {
     return results;
   }
 
-  // ==================== 运行时通信 ====================
+  // ==================== Runtime messaging ====================
 
   /**
-   * 发送消息到运行时（后台脚本）
-   * @param message 消息对象
-   * @param options 发送选项
-   * @returns 发送结果
+   * Sends a message to the runtime (background script)
+   * @param message message
+   * @param options send options
+   * @returns send result
    */
   public async sendToRuntime(
     message: Message,
@@ -240,23 +240,23 @@ export class MessagingService {
       const response = await browser.runtime.sendMessage(message);
 
       if (this.config.enableLogging) {
-        console.log('[MessagingService] 发送到运行时成功:', message.type);
+        console.log('[MessagingService] Sent to runtime:', message.type);
       }
 
       return { success: true, response };
     } catch (error) {
-      const errorMessage = `发送消息到运行时失败: ${error}`;
+      const errorMessage = `Failed to send message to the runtime: ${error}`;
       console.error('[MessagingService]', errorMessage);
       return { success: false, error: errorMessage };
     }
   }
 
-  // ==================== 高级消息方法 ====================
+  // ==================== Higher-level messages ====================
 
   /**
-   * 通知设置已更新
-   * @param settings 新的设置
-   * @returns 发送结果
+   * Notifies that settings changed
+   * @param settings new settings
+   * @returns send results
    */
   public async notifySettingsChanged(
     settings: UserSettings,
@@ -276,18 +276,18 @@ export class MessagingService {
         const result = await this.sendToTab(tabs[0].id, message);
         return [result];
       }
-      return [{ success: false, error: '没有找到活跃标签页' }];
+      return [{ success: false, error: 'No active tab found' }];
     }
   }
 
   /**
-   * 发送右键菜单动作消息到后台脚本
-   * @param action 动作类型
-   * @param url 目标URL
-   * @param pattern URL模式
-   * @param patternType 模式类型
-   * @param description 可选的描述
-   * @returns 发送结果
+   * Sends a context menu action to the background script
+   * @param action action type
+   * @param url target URL
+   * @param pattern URL pattern
+   * @param patternType pattern type
+   * @param description optional description
+   * @returns send result
    */
   public async sendContextMenuAction(
     action: ContextMenuActionType,
@@ -313,8 +313,8 @@ export class MessagingService {
   }
 
   /**
-   * 通知网站管理设置已更新
-   * @returns 发送结果数组
+   * Notifies that website management settings changed
+   * @returns send results
    */
   public async notifyWebsiteManagementChanged(): Promise<MessageSendResult[]> {
     const message: WebsiteManagementUpdateMessage = {
@@ -331,16 +331,16 @@ export class MessagingService {
         const result = await this.sendToTab(tabs[0].id, message);
         return [result];
       }
-      return [{ success: false, error: '没有找到活跃标签页' }];
+      return [{ success: false, error: 'No active tab found' }];
     }
   }
 
   /**
-   * 发送通知消息
-   * @param title 通知标题
-   * @param message 通知内容
-   * @param level 通知级别
-   * @returns 发送结果数组
+   * Sends a notification message
+   * @param title notification title
+   * @param message notification body
+   * @param level notification level
+   * @returns send results
    */
   public async sendNotification(
     title: string,
@@ -358,12 +358,12 @@ export class MessagingService {
     return await this.broadcastToTabs(notificationMessage);
   }
 
-  // ==================== 工具方法 ====================
+  // ==================== Utilities ====================
 
   /**
-   * 获取消息历史记录
-   * @param limit 限制返回数量
-   * @returns 消息历史数组
+   * Returns the message history
+   * @param limit maximum number of entries
+   * @returns message history
    */
   public getMessageHistory(limit?: number): Message[] {
     if (limit && limit > 0) {
@@ -373,14 +373,14 @@ export class MessagingService {
   }
 
   /**
-   * 清空消息历史记录
+   * Clears the message history
    */
   public clearMessageHistory(): void {
     this.messageHistory = [];
   }
 
   /**
-   * 获取服务状态
+   * Service status
    */
   public getStatus() {
     return {
@@ -395,10 +395,10 @@ export class MessagingService {
   }
 }
 
-// ==================== 导出 ====================
+// ==================== Exports ====================
 
-// 单例实例导出
+// Singleton instance
 export const messagingService = MessagingService.getInstance();
 
-// 默认导出
+// Default export
 export default MessagingService;

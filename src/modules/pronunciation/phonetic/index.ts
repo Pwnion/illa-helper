@@ -1,6 +1,6 @@
 /**
- * 音标功能模块统一导出
- * 包含音标接口、实现类和工厂类
+ * Phonetics exports:
+ * provider interface, implementation and factory
  */
 
 export { IPhoneticProvider } from './IPhoneticProvider';

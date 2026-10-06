@@ -1,13 +1,13 @@
 /**
- * 请求处理工具函数
+ * Request helpers
  */
 
 import { ApiConfig } from '../../shared/types/api';
 import { BackgroundProxyResponse } from '../types';
 
 /**
- * 发送 API 请求。
- * 扩展页面可能运行在 HTTPS 页面上下文中，统一走 background 避免 Mixed Content 和 CORS 分叉。
+ * Sends an API request.
+ * Extension pages may run inside HTTPS page contexts, so every request goes through the background to avoid mixed-content and CORS divergence.
  */
 export async function sendApiRequest(
   requestBody: any,
@@ -18,7 +18,7 @@ export async function sendApiRequest(
 }
 
 /**
- * 通过后台代理发送请求
+ * Sends the request through the background proxy
  */
 async function sendViaBackground(
   requestBody: any,

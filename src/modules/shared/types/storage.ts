@@ -1,6 +1,6 @@
 /**
- * 存储配置相关类型定义
- * 包含用户设置、右键菜单、消息传递等相关接口
+ * Settings storage types:
+ * user settings, context menu and messaging interfaces
  */
 
 import type {
@@ -17,13 +17,13 @@ import type {
 import type { ApiConfigItem, MultilingualConfig } from './api';
 import type { TooltipHotkey, FloatingBallConfig } from './ui';
 
-// 用户设置主接口
+// User settings
 export interface UserSettings {
   userLevel: UserLevel;
   replacementRate: number;
   isEnabled: boolean;
   useGptApi: boolean;
-  // 修改：支持多API配置
+  // Multiple API configurations
   apiConfigs: ApiConfigItem[];
   activeApiConfigId: string;
   translationStyle: TranslationStyle;
@@ -32,25 +32,25 @@ export interface UserSettings {
   maxLength?: number;
   originalWordDisplayMode: OriginalWordDisplayMode;
   enablePronunciationTooltip: boolean;
-  // 新增：多语言智能翻译设置
+  // Native and target language
   multilingualConfig: MultilingualConfig;
-  // 新增：发音弹出框快捷键设置
+  // Pronunciation tooltip hotkey
   pronunciationHotkey: TooltipHotkey;
-  // 新增：悬浮球设置
+  // Floating ball
   floatingBall: FloatingBallConfig;
-  // 新增：翻译位置设置
+  // Translation position
   translationPosition: TranslationPosition;
-  // 新增：是否显示括号
+  // Whether to wrap translations in parentheses
   showParentheses: boolean;
-  // 新增：API请求超时时间配置
-  apiRequestTimeout: number; // 以毫秒为单位
-  // 新增：自定义翻译样式CSS
+  // API request timeout
+  apiRequestTimeout: number; // milliseconds
+  // Custom translation style CSS
   customTranslationCSS: string;
-  // 新增：懒加载配置
+  // Lazy loading
   lazyLoading: LazyLoadingConfig;
 }
 
-// 右键菜单消息接口
+// Context menu message
 export interface ContextMenuMessage {
   type: ContextMenuActionType;
   url: string;

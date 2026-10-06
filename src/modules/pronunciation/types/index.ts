@@ -1,13 +1,12 @@
 /**
- * 类型定义统一导出
+ * Pronunciation type exports
  */
 
-// 导出所有类型
 export * from './phonetic.types';
 export * from './tts.types';
 export * from './ui.types';
 
-// 便捷导入 - 音标相关
+// Phonetics
 export type {
   PhoneticInfo,
   PhoneticEntry,
@@ -17,14 +16,14 @@ export type {
   CacheEntry,
 } from './phonetic.types';
 
-// 便捷导入 - TTS相关
+// TTS
 export type {
   TTSResult,
   TTSProviderType,
   TTSProviderStatus,
 } from './tts.types';
 
-// 便捷导入 - UI相关
+// UI
 export type {
   PronunciationElementData,
   TooltipType,

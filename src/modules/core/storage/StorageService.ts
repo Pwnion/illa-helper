@@ -1,13 +1,13 @@
 /**
- * 存储管理服务
- * 负责管理用户配置的存储，支持多API配置管理、事件通知、数据验证
+ * Settings storage service:
+ * persists user settings, with multiple API configurations, events and validation
  *
- * 功能特性：
- * - 用户设置的序列化存储和读取
- * - 多API配置管理
- * - 数据验证和自动修复
- * - 事件通知机制
- * - 配置统计信息
+ * Features:
+ * - serialised settings storage
+ * - multiple API configurations
+ * - validation and automatic repair
+ * - change events
+ * - configuration statistics
  */
 
 import { browser } from 'wxt/browser';
@@ -31,24 +31,24 @@ import {
   StorageEventListener,
 } from './types';
 
-// ==================== 存储管理服务类 ====================
+// ==================== Storage service ====================
 
 /**
- * 存储管理服务
- * 采用单例模式，提供统一的存储管理功能
+ * Storage service
+ * (singleton)
  */
 export class StorageService {
   private static instance: StorageService;
   private static readonly STORAGE_KEY = 'user_settings';
 
-  // 配置和状态
+  // Configuration and state
   private readonly config: StorageServiceConfig;
   private readonly storageKey: string;
   private eventListeners: Map<StorageEventType, StorageEventListener[]> =
     new Map();
 
   /**
-   * 私有构造函数，防止外部实例化
+   * Private constructor (singleton)
    */
   private constructor(config: StorageServiceConfig = {}) {
     this.config = {
@@ -62,9 +62,9 @@ export class StorageService {
   }
 
   /**
-   * 获取服务实例
-   * @param config 可选的服务配置
-   * @returns StorageService 实例
+   * Returns the singleton instance
+   * @param config optional service configuration
+   * @returns StorageService instance
    */
   public static getInstance(config?: StorageServiceConfig): StorageService {
     if (!StorageService.instance) {
@@ -73,12 +73,12 @@ export class StorageService {
     return StorageService.instance;
   }
 
-  // ==================== 事件管理 ====================
+  // ==================== Events ====================
 
   /**
-   * 添加事件监听器
-   * @param eventType 事件类型
-   * @param listener 监听器函数
+   * Adds an event listener
+   * @param eventType event type
+   * @param listener listener
    */
   public addEventListener(
     eventType: StorageEventType,
@@ -91,9 +91,9 @@ export class StorageService {
   }
 
   /**
-   * 移除事件监听器
-   * @param eventType 事件类型
-   * @param listener 监听器函数
+   * Removes an event listener
+   * @param eventType event type
+   * @param listener listener
    */
   public removeEventListener(
     eventType: StorageEventType,
@@ -109,10 +109,10 @@ export class StorageService {
   }
 
   /**
-   * 触发事件
-   * @param eventType 事件类型
-   * @param data 事件数据
-   * @param error 错误信息
+   * Emits an event
+   * @param eventType event type
+   * @param data event data
+   * @param error error message
    */
   private emitEvent(
     eventType: StorageEventType,
@@ -138,11 +138,11 @@ export class StorageService {
     }
   }
 
-  // ==================== 核心存储功能 ====================
+  // ==================== Core storage ====================
 
   /**
-   * 获取用户设置
-   * @returns 用户设置
+   * Loads the user settings
+   * @returns user settings
    */
   public async getUserSettings(): Promise<UserSettings> {
     try {
@@ -164,7 +164,7 @@ export class StorageService {
       this.emitEvent(StorageEventType.SETTINGS_LOADED, validatedSettings);
       return validatedSettings;
     } catch (error) {
-      const errorMessage = `获取用户设置失败: ${error}`;
+      const errorMessage = `Failed to load user settings: ${error}`;
       console.error(errorMessage);
       this.emitEvent(
         StorageEventType.SETTINGS_LOADED,
@@ -176,19 +176,19 @@ export class StorageService {
   }
 
   /**
-   * 保存用户设置
-   * @param settings 要保存的用户设置
+   * Saves the user settings
+   * @param settings settings to save
    */
   public async saveUserSettings(
     settings: UserSettings,
   ): Promise<StorageOperationResult> {
     try {
-      // 验证设置
+      // Validate
       if (this.config.enableValidation) {
         settings = this.validateAndFixSettings(settings);
       }
 
-      // 序列化数据
+      // Serialise
       const serializedData = JSON.stringify(settings);
 
       await browser.storage.sync.set({
@@ -198,17 +198,17 @@ export class StorageService {
       this.emitEvent(StorageEventType.SETTINGS_SAVED, settings);
       return { success: true, data: settings };
     } catch (error) {
-      const errorMessage = `保存用户设置失败: ${error}`;
+      const errorMessage = `Failed to save user settings: ${error}`;
       console.error(errorMessage);
       this.emitEvent(StorageEventType.SETTINGS_SAVED, null, errorMessage);
       return { success: false, error: errorMessage };
     }
   }
 
-  // ==================== API配置管理 ====================
+  // ==================== API configurations ====================
 
   /**
-   * 获取当前活跃的API配置项，保留 id 和协议族，避免调用链丢失配置身份。
+   * Returns the active API configuration item, keeping its id and protocol family so callers never lose its identity.
    */
   public async getActiveApiConfigItem(): Promise<ApiConfigItem | null> {
     try {
@@ -219,26 +219,26 @@ export class StorageService {
         ) || null
       );
     } catch (error) {
-      console.error('获取活跃API配置项失败:', error);
+      console.error('Failed to get the active API configuration item:', error);
       return null;
     }
   }
 
   /**
-   * 获取当前活跃的API配置
+   * Returns the active API configuration
    */
   public async getActiveApiConfig(): Promise<ApiConfig | null> {
     try {
       const activeConfig = await this.getActiveApiConfigItem();
       return activeConfig?.config || null;
     } catch (error) {
-      console.error('获取活跃API配置失败:', error);
+      console.error('Failed to get the active API configuration:', error);
       return null;
     }
   }
 
   /**
-   * 设置活跃的API配置
+   * Sets the active API configuration
    */
   public async setActiveApiConfig(
     configId: string,
@@ -250,7 +250,7 @@ export class StorageService {
       );
 
       if (!configExists) {
-        const errorMessage = `API配置 ${configId} 不存在`;
+        const errorMessage = `API configuration ${configId} does not exist`;
         console.error(errorMessage);
         return { success: false, error: errorMessage };
       }
@@ -264,14 +264,14 @@ export class StorageService {
 
       return saveResult;
     } catch (error) {
-      const errorMessage = `设置活跃API配置失败: ${error}`;
+      const errorMessage = `Failed to set the active API configuration: ${error}`;
       console.error(errorMessage);
       return { success: false, error: errorMessage };
     }
   }
 
   /**
-   * 添加新的API配置
+   * Adds an API configuration
    */
   public async addApiConfig(
     name: string,
@@ -297,14 +297,14 @@ export class StorageService {
 
       return saveResult;
     } catch (error) {
-      const errorMessage = `添加API配置失败: ${error}`;
+      const errorMessage = `Failed to add the API configuration: ${error}`;
       console.error(errorMessage);
       return { success: false, error: errorMessage };
     }
   }
 
   /**
-   * 更新API配置
+   * Updates an API configuration
    */
   public async updateApiConfig(
     configId: string,
@@ -319,7 +319,7 @@ export class StorageService {
       );
 
       if (configIndex === -1) {
-        const errorMessage = `API配置 ${configId} 不存在`;
+        const errorMessage = `API configuration ${configId} does not exist`;
         console.error(errorMessage);
         return { success: false, error: errorMessage };
       }
@@ -341,14 +341,14 @@ export class StorageService {
 
       return saveResult;
     } catch (error) {
-      const errorMessage = `更新API配置失败: ${error}`;
+      const errorMessage = `Failed to update the API configuration: ${error}`;
       console.error(errorMessage);
       return { success: false, error: errorMessage };
     }
   }
 
   /**
-   * 删除API配置
+   * Removes an API configuration
    */
   public async removeApiConfig(
     configId: string,
@@ -357,12 +357,12 @@ export class StorageService {
       const settings = await this.getUserSettings();
 
       if (settings.apiConfigs.length <= 1) {
-        const errorMessage = '至少保留一个API配置';
+        const errorMessage = 'At least one API configuration must remain';
         console.error(errorMessage);
         return { success: false, error: errorMessage };
       }
 
-      // 如果删除的是当前活跃配置，切换到第一个配置
+      // When removing the active configuration, switch to the first remaining one
       if (settings.activeApiConfigId === configId) {
         const firstConfig = settings.apiConfigs.find((c) => c.id !== configId);
         if (firstConfig) {
@@ -382,16 +382,16 @@ export class StorageService {
 
       return saveResult;
     } catch (error) {
-      const errorMessage = `删除API配置失败: ${error}`;
+      const errorMessage = `Failed to remove the API configuration: ${error}`;
       console.error(errorMessage);
       return { success: false, error: errorMessage };
     }
   }
 
-  // ==================== 数据管理 ====================
+  // ==================== Data management ====================
 
   /**
-   * 清除所有数据
+   * Clears all data
    */
   public async clearAllData(): Promise<StorageOperationResult> {
     try {
@@ -399,27 +399,27 @@ export class StorageService {
       this.emitEvent(StorageEventType.DATA_CLEARED);
       return { success: true };
     } catch (error) {
-      const errorMessage = `清除数据失败: ${error}`;
+      const errorMessage = `Failed to clear data: ${error}`;
       console.error(errorMessage);
       return { success: false, error: errorMessage };
     }
   }
 
   /**
-   * 获取配置统计信息 - 简化版本
+   * Configuration statistics
    */
   public async getConfigStats(): Promise<ConfigurationStats> {
     try {
       const settings = await this.getUserSettings();
 
       return {
-        intelligentModeEnabled: true, // 简化后默认启用
+        intelligentModeEnabled: true,
         targetLanguage: settings.multilingualConfig.targetLanguage,
         totalKeys: Object.keys(settings).length,
         apiConfigsCount: settings.apiConfigs.length,
       };
     } catch (error) {
-      console.error('获取配置统计失败:', error);
+      console.error('Failed to get configuration statistics:', error);
       return {
         intelligentModeEnabled: true,
         targetLanguage: 'en',
@@ -429,18 +429,18 @@ export class StorageService {
     }
   }
 
-  // ==================== 数据验证 ====================
+  // ==================== Validation ====================
 
   /**
-   * 验证和修复设置
-   * @param settings 原始设置
-   * @returns 修复后的设置
+   * Validates and repairs settings
+   * @param settings raw settings
+   * @returns repaired settings
    */
   private validateAndFixSettings(settings: UserSettings): UserSettings {
     const validatedSettings = { ...settings };
 
     try {
-      // 确保必要字段存在
+      // Make sure required fields exist
       if (!validatedSettings.apiConfigs) {
         validatedSettings.apiConfigs = DEFAULT_SETTINGS.apiConfigs;
       }
@@ -460,7 +460,7 @@ export class StorageService {
         }
       }
 
-      // 验证活跃配置是否存在
+      // Make sure the active configuration exists
       if (validatedSettings.activeApiConfigId) {
         const activeConfigExists = validatedSettings.apiConfigs.some(
           (config) => config.id === validatedSettings.activeApiConfigId,
@@ -472,20 +472,20 @@ export class StorageService {
         }
       }
 
-      // 验证其他必要字段
+      // Other required fields
       if (!validatedSettings.multilingualConfig) {
         validatedSettings.multilingualConfig =
           DEFAULT_SETTINGS.multilingualConfig;
       }
 
-      // 确保懒加载配置存在
+      // Lazy loading configuration
       if (!validatedSettings.lazyLoading) {
         validatedSettings.lazyLoading = DEFAULT_SETTINGS.lazyLoading;
       }
 
       return validatedSettings;
     } catch (error) {
-      console.error(`设置验证异常: ${error}`);
+      console.error(`Settings validation failed: ${error}`);
       return DEFAULT_SETTINGS;
     }
   }
@@ -511,7 +511,7 @@ export class StorageService {
 
     const protocolFamily = normalizeApiProtocolFamily(candidate.protocolFamily);
     if (!protocolFamily) {
-      // 只接受当前协议族；旧 provider 名称和未知配置直接丢弃。
+      // Only current protocol families are accepted; old provider names and unknown configs are dropped.
       return null;
     }
 
@@ -530,10 +530,10 @@ export class StorageService {
   }
 
   /**
-   * 检查配置是否有变化
-   * @param original 原始配置
-   * @param fixed 修复后的配置
-   * @returns 是否有变化
+   * Whether the configuration changed
+   * @param original original configuration
+   * @param fixed repaired configuration
+   * @returns whether it changed
    */
   private hasConfigurationChanged(
     original: UserSettings,
@@ -542,15 +542,15 @@ export class StorageService {
     try {
       return JSON.stringify(original) !== JSON.stringify(fixed);
     } catch {
-      return true; // 如果比较失败，认为有变化
+      return true; // treat comparison failures as changed
     }
   }
 }
 
-// ==================== 导出 ====================
+// ==================== Exports ====================
 
-// 单例实例导出
+// Singleton instance
 export const storageService = StorageService.getInstance();
 
-// 默认导出
+// Default export
 export default StorageService;

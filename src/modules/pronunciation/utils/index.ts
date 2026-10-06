@@ -1,5 +1,5 @@
 /**
- * 工具类模块统一导出
+ * Pronunciation utility exports
  */
 
 export * from './TimerManager';

@@ -1,11 +1,11 @@
 /**
- * 懒加载服务 - 管理基于视口的懒加载翻译功能
+ * Lazy loading service: viewport-based lazy translation.
  *
- * 核心功能：
- * 1. 管理 Intersection Observer 实例
- * 2. 协调视口检测和翻译触发
- * 3. 处理动态内容的观察者更新
- * 4. 提供性能优化和错误处理
+ * Responsibilities:
+ * 1. owns the IntersectionObserver
+ * 2. connects viewport detection to translation
+ * 3. updates observation for dynamic content
+ * 4. performance and error handling
  */
 
 import type { LazyLoadingConfig } from '../../shared/types/core';
@@ -16,28 +16,28 @@ import {
 } from '../utils/SegmentObserver';
 
 /**
- * 懒加载回调函数类型
+ * Lazy loading callback
  */
 export type LazyLoadingCallback = (segments: ContentSegment[]) => Promise<void>;
 
 /**
- * 懒加载服务状态
+ * Lazy loading state
  */
 interface LazyLoadingState {
-  /** 是否已初始化 */
+  /** Whether the service has been initialised */
   initialized: boolean;
-  /** 是否已启用 */
+  /** Whether lazy loading is enabled */
   enabled: boolean;
-  /** 待处理的段落队列 */
+  /** Segments waiting to be processed */
   processingQueue: Set<string>;
-  /** 已处理的段落记录 */
+  /** Segments already processed */
   processedSegments: Set<string>;
-  /** 段落缓存 */
+  /** Segment cache */
   segmentCache: Map<string, ContentSegment>;
 }
 
 /**
- * 懒加载服务
+ * Lazy loading service
  */
 export class LazyLoadingService {
   private config: LazyLoadingConfig;
@@ -59,7 +59,7 @@ export class LazyLoadingService {
   }
 
   /**
-   * 初始化懒加载服务
+   * Initialises the service
    */
   initialize(): void {
     if (this.state.initialized) return;
@@ -73,7 +73,7 @@ export class LazyLoadingService {
   }
 
   /**
-   * 创建观察器
+   * Creates the observer
    */
   private createObserver(): void {
     if (this.observer) {
@@ -95,29 +95,29 @@ export class LazyLoadingService {
   }
 
   /**
-   * 处理段落可见性变化
+   * Handles segment visibility changes
    */
   private handleVisibilityChange(visibleSegments: ContentSegment[]): void {
     if (!this.state.enabled || this.isDestroyed) return;
 
-    // 处理进入视口的段落
+    // Segments entering the viewport
     if (visibleSegments.length > 0) {
       this.scheduleProcessing(visibleSegments);
     }
   }
 
   /**
-   * 调度处理 - 防止并发问题
+   * Schedules processing without overlapping runs
    */
   private scheduleProcessing(segments: ContentSegment[]): void {
-    // 过滤已处理的段落
+    // Skip segments already processed
     const unprocessedSegments = segments.filter(
       (segment) => !this.state.processedSegments.has(segment.fingerprint),
     );
 
     if (unprocessedSegments.length === 0) return;
 
-    // 添加到处理队列和缓存
+    // Queue and cache
     unprocessedSegments.forEach((segment) => {
       this.state.processingQueue.add(segment.fingerprint);
       this.state.segmentCache.set(segment.fingerprint, segment);
@@ -131,14 +131,14 @@ export class LazyLoadingService {
       return;
     }
 
-    // 延迟处理，避免频繁触发
+    // Debounce to avoid frequent runs
     this.processingTimer = window.setTimeout(() => {
       this.processAllQueuedSegments();
     }, 100);
   }
 
   /**
-   * 处理队列中的所有段落 - 解决并发跳过问题
+   * Processes every queued segment, so segments queued during a run are not skipped
    */
   private async processAllQueuedSegments(): Promise<void> {
     if (!this.processingCallback || this.isDestroyed) return;
@@ -165,14 +165,14 @@ export class LazyLoadingService {
     try {
       await this.runProcessingCallbackWhenIdle(segmentsToProcess);
 
-      // 标记为已处理并从缓存中移除
+      // Mark as processed and drop from the cache
       segmentsToProcess.forEach((segment) => {
         this.state.processedSegments.add(segment.fingerprint);
         this.state.processingQueue.delete(segment.fingerprint);
         this.state.segmentCache.delete(segment.fingerprint);
       });
     } catch (_) {
-      // 即使失败也要清理队列，避免重复处理
+      // Clear the queue even on failure to avoid reprocessing
       segmentsToProcess.forEach((segment) => {
         this.state.processingQueue.delete(segment.fingerprint);
         this.state.segmentCache.delete(segment.fingerprint);
@@ -180,7 +180,7 @@ export class LazyLoadingService {
     } finally {
       this.processingTimer = null;
       if (this.state.processingQueue.size > 0 && !this.isDestroyed) {
-        // 处理过程中进入视口的新段落留在队列里，当前批次结束后继续 drain。
+        // Segments that became visible during this run stay queued; drain again once this batch finishes.
         this.scheduleQueueDrain();
       }
     }
@@ -204,7 +204,7 @@ export class LazyLoadingService {
   }
 
   /**
-   * 开始观察段落
+   * Starts observing segments
    */
   observeSegments(segments: ContentSegment[]): void {
     if (
@@ -219,7 +219,7 @@ export class LazyLoadingService {
   }
 
   /**
-   * 停止观察段落
+   * Stops observing segments
    */
   unobserveSegments(segments: ContentSegment[]): void {
     if (!this.observer || this.isDestroyed) return;
@@ -227,14 +227,14 @@ export class LazyLoadingService {
   }
 
   /**
-   * 设置处理回调
+   * Sets the processing callback
    */
   setProcessingCallback(callback: LazyLoadingCallback): void {
     this.processingCallback = callback;
   }
 
   /**
-   * 更新配置
+   * Updates the configuration
    */
   updateConfig(newConfig: LazyLoadingConfig): void {
     if (this.isDestroyed) return;
@@ -242,7 +242,7 @@ export class LazyLoadingService {
     const oldEnabled = this.config.enabled;
     this.config = { ...newConfig };
 
-    // 如果启用状态发生变化
+    // Enabled state changed
     if (oldEnabled !== newConfig.enabled) {
       this.state.enabled = newConfig.enabled;
       if (!newConfig.enabled) {
@@ -250,14 +250,14 @@ export class LazyLoadingService {
       }
     }
 
-    // 如果观察器配置发生变化，重新创建观察器
+    // Recreate the observer when its options change
     if (this.state.initialized && this.observer) {
       this.createObserver();
     }
   }
 
   /**
-   * 停止所有观察
+   * Stops all observation
    */
   private stopAllObservation(): void {
     if (this.observer) {
@@ -271,7 +271,7 @@ export class LazyLoadingService {
     }
   }
 
-  // 基础状态查询方法
+  // State queries
   isEnabled(): boolean {
     return this.state.initialized && this.state.enabled;
   }
@@ -285,7 +285,7 @@ export class LazyLoadingService {
   }
 
   /**
-   * 销毁服务
+   * Destroys the service
    */
   destroy(): void {
     if (this.isDestroyed) return;

@@ -1,12 +1,10 @@
 /**
- * 发音模块配置统一导出
+ * Pronunciation configuration exports
  */
 
-// 导出配置相关
 export * from './pronunciation.config';
 export * from './constants';
 
-// 便捷导入
 export {
   DEFAULT_PRONUNCIATION_CONFIG,
   DEFAULT_TTS_CONFIG,

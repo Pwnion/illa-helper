@@ -1,5 +1,5 @@
 /**
- * 通知服务 - 处理扩展的所有通知功能
+ * Notification service: every extension notification
  */
 
 import { browser } from 'wxt/browser';
@@ -23,7 +23,7 @@ export class NotificationService {
   }
 
   /**
-   * 获取单例实例
+   * Returns the singleton instance
    */
   public static getInstance(): NotificationService {
     if (!NotificationService.instance) {
@@ -33,7 +33,7 @@ export class NotificationService {
   }
 
   /**
-   * 显示基础通知
+   * Shows a basic notification
    */
   public async showNotification(
     notificationConfig: NotificationConfig,
@@ -48,24 +48,24 @@ export class NotificationService {
       });
       return notificationId || '';
     } catch (error) {
-      console.error('创建通知失败:', error);
+      console.error('Failed to create notification:', error);
       throw new NotificationError(
-        `创建通知失败: ${error instanceof Error ? error.message : '未知错误'}`,
+        `Failed to create notification: ${error instanceof Error ? error.message : 'unknown error'}`,
         { notificationConfig },
       );
     }
   }
 
   /**
-   * 显示API配置错误通知
+   * Shows the API configuration error notification
    */
   public async showApiConfigError(
     source: 'user_action' | 'page_load',
   ): Promise<void> {
     const notificationConfig: NotificationConfig = {
       type: 'basic',
-      title: '[浸入式学语言助手] API 配置错误',
-      message: 'API 密钥未设置。请点击扩展图标进入设置页面进行配置。',
+      title: '[ILLA Helper] API configuration error',
+      message: 'No API key set. Click the extension icon to open settings.',
       iconUrl: browser.runtime.getURL('/warning.png'),
     };
 
@@ -80,13 +80,16 @@ export class NotificationService {
         }
       }
     } catch (error) {
-      console.error('显示API配置错误通知失败:', error);
+      console.error(
+        'Failed to show the API configuration error notification:',
+        error,
+      );
       throw error;
     }
   }
 
   /**
-   * 显示成功通知
+   * Shows a success notification
    */
   public async showSuccessNotification(
     title: string,
@@ -102,7 +105,7 @@ export class NotificationService {
   }
 
   /**
-   * 显示错误通知
+   * Shows an error notification
    */
   public async showErrorNotification(
     title: string,
@@ -118,7 +121,7 @@ export class NotificationService {
   }
 
   /**
-   * 显示警告通知
+   * Shows a warning notification
    */
   public async showWarningNotification(
     title: string,
@@ -136,7 +139,7 @@ export class NotificationService {
   }
 
   /**
-   * 显示带进度的通知
+   * Shows a progress notification
    */
   public async showProgressNotification(
     title: string,
@@ -149,24 +152,26 @@ export class NotificationService {
       message,
       iconUrl: browser.runtime.getURL('/icon/48.png'),
       priority: 1,
-      progress: Math.max(0, Math.min(100, progress)), // 确保进度在0-100之间
+      progress: Math.max(0, Math.min(100, progress)), // clamp to 0-100
     } as chrome.notifications.NotificationCreateOptions;
 
     try {
       const notificationId = await browser.notifications.create(options);
-      console.log(`进度通知已创建: ${notificationId}, 进度: ${progress}%`);
+      console.log(
+        `Progress notification created: ${notificationId}, progress: ${progress}%`,
+      );
       return notificationId || '';
     } catch (error) {
-      console.error('创建进度通知失败:', error);
+      console.error('Failed to create progress notification:', error);
       throw new NotificationError(
-        `创建进度通知失败: ${error instanceof Error ? error.message : '未知错误'}`,
+        `Failed to create progress notification: ${error instanceof Error ? error.message : 'unknown error'}`,
         { title, message, progress },
       );
     }
   }
 
   /**
-   * 更新进度通知
+   * Updates a progress notification
    */
   public async updateProgressNotification(
     notificationId: string,
@@ -183,34 +188,36 @@ export class NotificationService {
       }
 
       await browser.notifications.update(notificationId, updateOptions);
-      console.log(`进度通知已更新: ${notificationId}, 进度: ${progress}%`);
+      console.log(
+        `Progress notification updated: ${notificationId}, progress: ${progress}%`,
+      );
     } catch (error) {
-      console.error('更新进度通知失败:', error);
+      console.error('Failed to update progress notification:', error);
       throw new NotificationError(
-        `更新进度通知失败: ${error instanceof Error ? error.message : '未知错误'}`,
+        `Failed to update progress notification: ${error instanceof Error ? error.message : 'unknown error'}`,
         { notificationId, progress, message },
       );
     }
   }
 
   /**
-   * 清除通知
+   * Clears a notification
    */
   public async clearNotification(notificationId: string): Promise<void> {
     try {
       await browser.notifications.clear(notificationId);
-      console.log(`通知已清除: ${notificationId}`);
+      console.log(`Notification cleared: ${notificationId}`);
     } catch (error) {
-      console.error('清除通知失败:', error);
+      console.error('Failed to clear notification:', error);
       throw new NotificationError(
-        `清除通知失败: ${error instanceof Error ? error.message : '未知错误'}`,
+        `Failed to clear notification: ${error instanceof Error ? error.message : 'unknown error'}`,
         { notificationId },
       );
     }
   }
 
   /**
-   * 清除所有通知
+   * Clears every notification
    */
   public async clearAllNotifications(): Promise<void> {
     try {
@@ -219,17 +226,17 @@ export class NotificationService {
         this.clearNotification(id),
       );
       await Promise.all(clearPromises);
-      console.log('所有通知已清除');
+      console.log('All notifications cleared');
     } catch (error) {
-      console.error('清除所有通知失败:', error);
+      console.error('Failed to clear all notifications:', error);
       throw new NotificationError(
-        `清除所有通知失败: ${error instanceof Error ? error.message : '未知错误'}`,
+        `Failed to clear all notifications: ${error instanceof Error ? error.message : 'unknown error'}`,
       );
     }
   }
 
   /**
-   * 检查会话通知是否已显示
+   * Whether the session notification has been shown
    */
   private async hasShownSessionNotification(): Promise<boolean> {
     try {
@@ -238,13 +245,13 @@ export class NotificationService {
       );
       return !!result[this.config.sessionStorageKey];
     } catch (error) {
-      console.error('检查会话通知状态失败:', error);
+      console.error('Failed to check session notification state:', error);
       return false;
     }
   }
 
   /**
-   * 标记会话通知已显示
+   * Marks the session notification as shown
    */
   private async markSessionNotificationShown(): Promise<void> {
     try {
@@ -252,23 +259,23 @@ export class NotificationService {
         [this.config.sessionStorageKey]: true,
       });
     } catch (error) {
-      console.error('标记会话通知状态失败:', error);
+      console.error('Failed to mark session notification state:', error);
     }
   }
 
   /**
-   * 重置会话通知状态
+   * Resets the session notification state
    */
   public async resetSessionNotificationStatus(): Promise<void> {
     try {
       await browser.storage.session.remove(this.config.sessionStorageKey);
     } catch (error) {
-      console.error('重置会话通知状态失败:', error);
+      console.error('Failed to reset session notification state:', error);
     }
   }
 
   /**
-   * 设置通知点击监听器
+   * Registers the notification click listener
    */
   public setNotificationClickListener(
     callback: (notificationId: string) => void,
@@ -277,7 +284,7 @@ export class NotificationService {
   }
 
   /**
-   * 设置通知按钮点击监听器
+   * Registers the notification button listener
    */
   public setNotificationButtonClickListener(
     callback: (notificationId: string, buttonIndex: number) => void,
@@ -288,7 +295,7 @@ export class NotificationService {
   }
 
   /**
-   * 设置通知关闭监听器
+   * Registers the notification closed listener
    */
   public setNotificationCloseListener(
     callback: (notificationId: string, byUser: boolean) => void,
@@ -297,38 +304,38 @@ export class NotificationService {
   }
 
   /**
-   * 更新配置
+   * Updates the configuration
    */
   public updateConfig(newConfig: Partial<NotificationServiceConfig>): void {
     this.config = { ...this.config, ...newConfig };
   }
 
   /**
-   * 获取当前配置
+   * Current configuration
    */
   public getConfig(): NotificationServiceConfig {
     return { ...this.config };
   }
 
   /**
-   * 验证通知权限
+   * Checks notification permission
    */
   public async checkNotificationPermission(): Promise<boolean> {
     try {
-      // 扩展默认有通知权限，但检查一下确保可用
+      // Extensions have notification permission by default; check anyway
       return browser.notifications !== undefined;
     } catch (error) {
-      console.error('检查通知权限失败:', error);
+      console.error('Failed to check notification permission:', error);
       return false;
     }
   }
 
   /**
-   * 销毁服务（清理资源）
+   * Destroys the service
    */
   public destroy(): void {
-    // 清理可能的监听器（如果有的话）
-    console.log('通知服务已销毁');
+    // Clean up any listeners
+    console.log('Notification service destroyed');
     NotificationService.instance = null;
   }
 }

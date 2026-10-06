@@ -1,6 +1,6 @@
 /**
- * Dictionary API 提供者实现
- * 调用 https://api.dictionaryapi.dev/api/v2/entries/en/ 获取音标信息
+ * Dictionary API provider.
+ * Fetches English phonetics from https://api.dictionaryapi.dev/api/v2/entries/en/
  */
 
 import { IPhoneticProvider } from './IPhoneticProvider';
@@ -21,21 +21,21 @@ export class DictionaryApiProvider implements IPhoneticProvider {
   private readonly cacheTTL = API_CONSTANTS.AI_TRANSLATION_CACHE_TTL;
 
   /**
-   * 获取单词的音标信息
+   * Looks up phonetics for a word
    */
   async getPhonetic(word: string): Promise<PhoneticResult> {
     try {
-      // 数据验证
+      // Validate input
       if (!word || typeof word !== 'string') {
         return {
           success: false,
-          error: '单词参数无效',
+          error: 'Invalid word',
         };
       }
 
       const cleanWord = word.toLowerCase().trim();
 
-      // 检查缓存
+      // Check the cache
       const cached = this.getFromCache(cleanWord);
       if (cached) {
         return {
@@ -45,7 +45,7 @@ export class DictionaryApiProvider implements IPhoneticProvider {
         };
       }
 
-      // 调用API
+      // Call the API
       const response = await fetch(
         `${this.baseUrl}${encodeURIComponent(cleanWord)}`,
         {
@@ -63,18 +63,18 @@ export class DictionaryApiProvider implements IPhoneticProvider {
         if (response.status === 404) {
           return {
             success: false,
-            error: `词库无该单词的音标`,
+            error: `No phonetics found for this word`,
           };
         }
         throw new Error(
-          `API请求失败: ${response.status} ${response.statusText}`,
+          `API request failed: ${response.status} ${response.statusText}`,
         );
       }
 
       const data = await response.json();
       const phoneticInfo = this.parseApiResponse(data, cleanWord);
 
-      // 存入缓存
+      // Cache the result
       this.setCache(cleanWord, phoneticInfo);
 
       return {
@@ -83,63 +83,63 @@ export class DictionaryApiProvider implements IPhoneticProvider {
         cached: false,
       };
     } catch (error) {
-      console.error('获取音标失败:', error);
+      console.error('Phonetics lookup failed:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : '未知错误',
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
 
   /**
-   * 批量获取音标信息
+   * Looks up phonetics for several words
    */
   async getBatchPhonetics(words: string[]): Promise<PhoneticResult[]> {
-    // Dictionary API 不支持批量请求，使用并发单个请求
+    // The Dictionary API has no batch endpoint, so issue single requests concurrently
     const promises = words.map((word) => this.getPhonetic(word));
     return Promise.all(promises);
   }
 
   /**
-   * 检查提供者是否可用
+   * Whether the provider is available
    */
   async isAvailable(): Promise<boolean> {
     try {
       const testResponse = await fetch(`${this.baseUrl}hello`, {
         method: 'HEAD',
-        signal: AbortSignal.timeout(5000), // 5秒超时
+        signal: AbortSignal.timeout(5000), // 5 second timeout
       });
-      return testResponse.ok || testResponse.status === 404; // 404也表示API可用
+      return testResponse.ok || testResponse.status === 404; // a 404 still means the API is up
     } catch {
       return false;
     }
   }
 
   /**
-   * 获取提供者配置
+   * Provider configuration
    */
   getConfig() {
     return {
       endpoint: this.baseUrl,
-      rateLimitPerMinute: 450, // Dictionary API 限制
+      rateLimitPerMinute: 450, // Dictionary API limit
       supportsBatch: false,
       supportsAudio: true,
     };
   }
 
   /**
-   * 解析API响应数据
+   * Parses the API response
    */
   private parseApiResponse(data: any[], word: string): PhoneticInfo {
     if (!Array.isArray(data) || data.length === 0) {
-      throw new Error('API响应数据格式错误');
+      throw new Error('Unexpected API response format');
     }
 
-    const entry = data[0]; // 取第一个条目
+    const entry = data[0]; // first entry
     const phonetics: PhoneticEntry[] = [];
     const meanings: MeaningEntry[] = [];
 
-    // 解析音标
+    // Phonetics
     if (entry.phonetics && Array.isArray(entry.phonetics)) {
       entry.phonetics.forEach((phonetic: any) => {
         if (phonetic.text || phonetic.audio) {
@@ -152,7 +152,7 @@ export class DictionaryApiProvider implements IPhoneticProvider {
       });
     }
 
-    // 解析词义
+    // Meanings
     if (entry.meanings && Array.isArray(entry.meanings)) {
       entry.meanings.forEach((meaning: any) => {
         if (meaning.partOfSpeech && meaning.definitions) {
@@ -180,7 +180,7 @@ export class DictionaryApiProvider implements IPhoneticProvider {
   }
 
   /**
-   * 从缓存获取数据
+   * Reads from the cache
    */
   private getFromCache(word: string): PhoneticInfo | null {
     const entry = this.cache.get(word);
@@ -188,7 +188,7 @@ export class DictionaryApiProvider implements IPhoneticProvider {
       return entry.data;
     }
 
-    // 清理过期缓存
+    // Drop expired entries
     if (entry) {
       this.cache.delete(word);
     }
@@ -197,7 +197,7 @@ export class DictionaryApiProvider implements IPhoneticProvider {
   }
 
   /**
-   * 设置缓存
+   * Writes to the cache
    */
   private setCache(word: string, data: PhoneticInfo): void {
     this.cache.set(word, {
@@ -206,7 +206,7 @@ export class DictionaryApiProvider implements IPhoneticProvider {
       ttl: this.cacheTTL,
     });
 
-    // 限制缓存大小
+    // Cap the cache size
     if (this.cache.size > 1000) {
       const firstKey = this.cache.keys().next().value;
       if (firstKey) {

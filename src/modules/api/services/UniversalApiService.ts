@@ -1,6 +1,6 @@
 /**
- * 通用大模型API服务
- * 提供简单易用的大模型调用接口，适用于各种业务场景
+ * General-purpose LLM API service
+ * with a simple call interface for any feature
  */
 
 import { StorageService } from '../../core/storage';
@@ -19,55 +19,55 @@ import {
 } from '../../shared/ApiConfigHelpers';
 
 /**
- * 通用API请求选项
+ * Request options
  */
 export interface UniversalApiOptions {
-  /** 系统提示词 */
+  /** System prompt */
   systemPrompt?: string;
-  /** 模型温度 (0-2，默认0.7) */
+  /** Temperature (0-2, default 0.7) */
   temperature?: number;
-  /** 最大输出Token数 */
+  /** Maximum output tokens */
   maxTokens?: number;
-  /** 指定使用的API配置ID */
+  /** API configuration id to use */
   configId?: string;
-  /** 强制使用特定的协议族 */
+  /** Force a protocol family */
   forceProvider?: ApiProtocolFamily;
-  /** 请求超时时间(毫秒，默认0无限制) */
+  /** Request timeout (ms, default 0 = no limit) */
   timeout?: number;
-  /** 自定义请求参数 JSON字符串 */
+  /** Custom request parameters as a JSON string */
   customParams?: string;
-  /** 是否返回原始响应 */
+  /** Whether to return the raw response */
   rawResponse?: boolean;
 }
 
 /**
- * 通用API响应结果
+ * Result
  */
 export interface UniversalApiResult {
-  /** 是否成功 */
+  /** Whether the call succeeded */
   success: boolean;
-  /** 用户输入的原始prompt */
+  /** The prompt sent */
   prompt: string;
-  /** AI生成的响应内容 */
+  /** The model's response */
   content: string;
-  /** 使用的模型名称 */
+  /** Model name */
   model?: string;
-  /** 使用的Provider名称 */
+  /** Provider name */
   provider?: string;
-  /** Token使用情况 */
+  /** Token usage */
   usage?: {
     promptTokens?: number;
     completionTokens?: number;
     totalTokens?: number;
   };
-  /** 原始API响应(当rawResponse=true时) */
+  /** Raw API response (when rawResponse=true) */
   rawData?: any;
-  /** 错误信息(失败时) */
+  /** Error message on failure */
   error?: string;
 }
 
 /**
- * 通用大模型API服务类
+ * General-purpose LLM API service
  */
 export class UniversalApiService {
   private static instance: UniversalApiService | null = null;
@@ -78,7 +78,7 @@ export class UniversalApiService {
   }
 
   /**
-   * 获取单例实例
+   * Returns the singleton instance
    */
   static getInstance(): UniversalApiService {
     if (!UniversalApiService.instance) {
@@ -88,27 +88,27 @@ export class UniversalApiService {
   }
 
   /**
-   * 通用的大模型调用方法
-   * @param prompt 用户输入的提示词
-   * @param options 可选配置
-   * @returns API响应结果
+   * Calls the model
+   * @param prompt user prompt
+   * @param options options
+   * @returns result
    */
   async call(
     prompt: string,
     options: UniversalApiOptions = {},
   ): Promise<UniversalApiResult> {
     try {
-      // 验证输入
+      // Validate input
       if (!prompt?.trim()) {
         return {
           success: false,
           prompt: prompt || '',
           content: '',
-          error: '输入提示词不能为空',
+          error: 'The prompt must not be empty',
         };
       }
 
-      // 获取API配置
+      // Resolve the API configuration
       const apiConfig = await this.getApiConfig(
         options.configId,
         options.forceProvider,
@@ -118,7 +118,7 @@ export class UniversalApiService {
           success: false,
           prompt,
           content: '',
-          error: '未找到可用的API配置',
+          error: 'No usable API configuration found',
         };
       }
 
@@ -128,18 +128,18 @@ export class UniversalApiService {
         return await this.callHttpApi(prompt, apiConfig, options);
       }
     } catch (error: any) {
-      console.error('UniversalApiService调用失败:', error);
+      console.error('UniversalApiService call failed:', error);
       return {
         success: false,
         prompt,
         content: '',
-        error: error.message || '调用过程中发生未知错误',
+        error: error.message || 'Unknown error during the call',
       };
     }
   }
 
   /**
-   * 调用Google Gemini SDK
+   * Calls the Google Gemini SDK
    */
   private async callGoogleGemini(
     prompt: string,
@@ -150,7 +150,7 @@ export class UniversalApiService {
       const config = apiConfig.config;
       const genAI = new GoogleGenerativeAI(config.apiKey);
 
-      // 基础生成配置
+      // Base generation config
       const baseGenerationConfig: any = {
         temperature: options.temperature ?? config.temperature ?? 0.7,
       };
@@ -159,13 +159,13 @@ export class UniversalApiService {
         baseGenerationConfig.maxOutputTokens = options.maxTokens;
       }
 
-      // 从 customParams 合并额外参数
+      // Merge extra parameters from customParams
       const generationConfig = mergeCustomParams(
         baseGenerationConfig,
         options.customParams || config.customParams,
       );
 
-      // 请求选项，如超时和代理端点
+      // Request options such as timeout and proxy endpoint
       const requestOptions: { timeout?: number; baseUrl?: string } = {};
       const timeout = options.timeout ?? getApiTimeout(0);
       if (timeout && timeout > 0) {
@@ -183,13 +183,13 @@ export class UniversalApiService {
         requestOptions,
       );
 
-      // 构建完整提示词
+      // Build the full prompt
       let fullPrompt = prompt;
       if (options.systemPrompt) {
         fullPrompt = `${options.systemPrompt}\n\n${prompt}`;
       }
 
-      console.log('Google Gemini调用:', {
+      console.log('Google Gemini request:', {
         model: config.model,
         prompt: fullPrompt,
         config: generationConfig,
@@ -199,9 +199,9 @@ export class UniversalApiService {
       const response = result.response;
       const content = response.text();
 
-      console.log('Google Gemini响应:', content);
+      console.log('Google Gemini response:', content);
 
-      // 构建返回结果
+      // Build the result
       const apiResult: UniversalApiResult = {
         success: true,
         prompt,
@@ -210,7 +210,7 @@ export class UniversalApiService {
         provider: getProtocolFamilyLabel(apiConfig.protocolFamily),
       };
 
-      // 添加Token使用信息（如果有）
+      // Token usage, when available
       if (response.usageMetadata) {
         apiResult.usage = {
           promptTokens: response.usageMetadata.promptTokenCount,
@@ -219,7 +219,7 @@ export class UniversalApiService {
         };
       }
 
-      // 如果需要原始响应
+      // Raw response, when requested
       if (options.rawResponse) {
         apiResult.rawData = {
           candidates: response.candidates,
@@ -229,18 +229,18 @@ export class UniversalApiService {
 
       return apiResult;
     } catch (error: any) {
-      console.error('Google Gemini调用失败:', error);
+      console.error('Google Gemini call failed:', error);
       return {
         success: false,
         prompt,
         content: '',
-        error: error.message || 'Google Gemini调用失败',
+        error: error.message || 'Google Gemini call failed',
       };
     }
   }
 
   /**
-   * 调用HTTP API (OpenAI兼容格式)
+   * Calls an OpenAI-compatible HTTP API
    */
   private async callHttpApi(
     prompt: string,
@@ -248,20 +248,20 @@ export class UniversalApiService {
     options: UniversalApiOptions,
   ): Promise<UniversalApiResult> {
     try {
-      // 构建请求参数
+      // Build the request body
       const requestBody = this.buildRequestBody(
         prompt,
         apiConfig.config,
         options,
       );
 
-      console.log('HTTP API调用:', {
+      console.log('HTTP API request:', {
         protocolFamily: apiConfig.protocolFamily,
         endpoint: apiConfig.config.apiEndpoint,
         body: requestBody,
       });
 
-      // 发送API请求
+      // Send the request
       const response = await this.sendRequest(
         requestBody,
         apiConfig.config,
@@ -270,32 +270,32 @@ export class UniversalApiService {
 
       if (!response.ok) {
         throw new Error(
-          `API请求失败: ${response.status} ${response.statusText}`,
+          `API request failed: ${response.status} ${response.statusText}`,
         );
       }
 
       const data = await response.json();
 
-      console.log('HTTP API响应:', data);
+      console.log('HTTP API response:', data);
 
-      // 解析响应
+      // Parse the response
       return this.parseResponse(data, prompt, apiConfig, options.rawResponse);
     } catch (error: any) {
-      console.error('HTTP API调用失败:', error);
+      console.error('HTTP API call failed:', error);
       return {
         success: false,
         prompt,
         content: '',
-        error: error.message || 'HTTP API调用失败',
+        error: error.message || 'HTTP API call failed',
       };
     }
   }
 
   /**
-   * 快速调用方法(使用默认配置)
-   * @param prompt 提示词
-   * @param systemPrompt 系统提示词(可选)
-   * @returns API响应结果
+   * Quick call with default options
+   * @param prompt prompt
+   * @param systemPrompt system prompt (optional)
+   * @returns result
    */
   async quickCall(
     prompt: string,
@@ -309,10 +309,10 @@ export class UniversalApiService {
   }
 
   /**
-   * 聊天对话方法
-   * @param messages 消息历史
-   * @param options 可选配置
-   * @returns API响应结果
+   * Chat call
+   * @param messages message history
+   * @param options options
+   * @returns result
    */
   async chat(
     messages: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>,
@@ -328,11 +328,11 @@ export class UniversalApiService {
           success: false,
           prompt: messages.map((m) => m.content).join('\n'),
           content: '',
-          error: '未找到可用的API配置',
+          error: 'No usable API configuration found',
         };
       }
 
-      // 构建聊天请求
+      // Build the chat request
       let requestBody: any = {
         model: apiConfig.config.model,
         messages: messages,
@@ -343,7 +343,7 @@ export class UniversalApiService {
         requestBody.max_tokens = options.maxTokens;
       }
 
-      // 合并自定义参数
+      // Merge custom parameters
       if (options.customParams) {
         requestBody = mergeCustomParams(requestBody, options.customParams);
       } else if (apiConfig.config.customParams) {
@@ -361,7 +361,7 @@ export class UniversalApiService {
 
       if (!response.ok) {
         throw new Error(
-          `API请求失败: ${response.status} ${response.statusText}`,
+          `API request failed: ${response.status} ${response.statusText}`,
         );
       }
 
@@ -378,15 +378,15 @@ export class UniversalApiService {
         success: false,
         prompt: messages.map((m) => m.content).join('\n'),
         content: '',
-        error: error.message || '聊天调用失败',
+        error: error.message || 'Chat call failed',
       };
     }
   }
 
   /**
-   * 检查API是否可用
-   * @param configId 可选的配置ID
-   * @returns 是否可用
+   * Whether the API is usable
+   * @param configId optional configuration id
+   * @returns whether it is usable
    */
   async isAvailable(configId?: string): Promise<boolean> {
     try {
@@ -398,8 +398,8 @@ export class UniversalApiService {
   }
 
   /**
-   * 获取可用的模型列表
-   * @returns 模型信息列表
+   * Available models
+   * @returns model list
    */
   async getAvailableModels(): Promise<
     Array<{ provider: string; model: string }>
@@ -416,7 +416,7 @@ export class UniversalApiService {
   }
 
   /**
-   * 获取API配置
+   * Resolves the API configuration
    */
   private async getApiConfig(
     configId?: string,
@@ -438,7 +438,7 @@ export class UniversalApiService {
       );
     }
 
-    // 使用当前活跃配置
+    // Use the active configuration
     return (
       userSettings.apiConfigs.find(
         (config) => config.id === userSettings.activeApiConfigId,
@@ -447,7 +447,7 @@ export class UniversalApiService {
   }
 
   /**
-   * 构建请求体
+   * Builds the request body
    */
   private buildRequestBody(
     prompt: string,
@@ -456,12 +456,12 @@ export class UniversalApiService {
   ): any {
     const messages = [];
 
-    // 添加系统提示词
+    // System prompt
     if (options.systemPrompt) {
       messages.push({ role: 'system', content: options.systemPrompt });
     }
 
-    // 添加用户提示词
+    // User prompt
     messages.push({ role: 'user', content: prompt });
 
     let requestBody: any = {
@@ -474,7 +474,7 @@ export class UniversalApiService {
       requestBody.max_tokens = options.maxTokens;
     }
 
-    // 合并自定义参数
+    // Merge custom parameters
     if (options.customParams) {
       requestBody = mergeCustomParams(requestBody, options.customParams);
     } else if (config.customParams) {
@@ -485,7 +485,7 @@ export class UniversalApiService {
   }
 
   /**
-   * 发送API请求
+   * Sends the API request
    */
   private async sendRequest(
     requestBody: any,
@@ -497,7 +497,7 @@ export class UniversalApiService {
   }
 
   /**
-   * 解析API响应
+   * Parses the API response
    */
   private parseResponse(
     data: any,
@@ -519,7 +519,7 @@ export class UniversalApiService {
           };
         }
       } else {
-        // OpenAI兼容格式 (OpenAI, DeepSeek, SiliconFlow等)
+        // OpenAI-compatible format
         content = data.choices?.[0]?.message?.content || '';
         if (data.usage) {
           usage = {
@@ -538,12 +538,12 @@ export class UniversalApiService {
         provider: getProtocolFamilyLabel(apiConfig.protocolFamily),
       };
 
-      // 添加Token使用信息
+      // Token usage
       if (usage) {
         result.usage = usage;
       }
 
-      // 如果需要原始响应
+      // Raw response, when requested
       if (rawResponse) {
         result.rawData = data;
       }
@@ -554,20 +554,20 @@ export class UniversalApiService {
         success: false,
         prompt,
         content: '',
-        error: '解析API响应失败',
+        error: 'Failed to parse the API response',
       };
     }
   }
 }
 
-// 导出便捷实例和方法
+// Convenience instance and functions
 export const universalApi = UniversalApiService.getInstance();
 
 /**
- * 通用AI调用函数(全局便捷方法)
- * @param prompt 提示词
- * @param options 可选配置
- * @returns API响应结果
+ * Calls the model (global convenience function)
+ * @param prompt prompt
+ * @param options options
+ * @returns result
  */
 export async function callAI(
   prompt: string,
@@ -577,10 +577,10 @@ export async function callAI(
 }
 
 /**
- * 快速AI调用函数
- * @param prompt 提示词
- * @param systemPrompt 系统提示词(可选)
- * @returns API响应结果
+ * Quick model call
+ * @param prompt prompt
+ * @param systemPrompt system prompt (optional)
+ * @returns result
  */
 export async function quickAI(
   prompt: string,

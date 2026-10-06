@@ -1,5 +1,5 @@
 /**
- * UI模块统一导出
+ * Pronunciation UI exports
  */
 
 export { TooltipRenderer } from './TooltipRenderer';

@@ -1,8 +1,8 @@
 /**
- * 音标提供者工厂。
+ * Phonetic provider factory.
  *
- * 这里只创建真正返回音标的 provider。AI 释义由 translation 模块负责，
- * 不再伪装成 IPhoneticProvider。
+ * Only creates providers that actually return phonetics. AI definitions belong
+ * to the translation module and no longer pose as an IPhoneticProvider.
  */
 
 import { IPhoneticProvider } from './IPhoneticProvider';

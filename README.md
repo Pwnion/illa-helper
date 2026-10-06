@@ -18,7 +18,6 @@
 
 > A browser extension based on the "comprehensible input" theory to help you learn languages naturally while browsing the web.
 
-English | [简体中文](./README_ZH.md)
 
 ## 📸 Feature Showcase
 

@@ -1,6 +1,6 @@
 /**
- * 样式管理器
- * 负责管理翻译文本的样式和CSS注入
+ * Style manager:
+ * translation text styles and CSS injection
  */
 
 import { TranslationStyle } from '../../shared/types/core';
@@ -14,21 +14,21 @@ export class StyleManager {
 
   constructor() {
     this.currentStyle = TranslationStyle.DEFAULT;
-    // 初始化样式
+    // Inject base styles
     this.initializeStyles();
   }
 
   /**
-   * 设置翻译样式
-   * @param style 样式类型
+   * Sets the translation style
+   * @param style style type
    */
   setTranslationStyle(style: TranslationStyle): void {
     this.currentStyle = style;
   }
 
   /**
-   * 设置自定义CSS
-   * @param css 自定义CSS样式
+   * Sets custom CSS
+   * @param css custom CSS
    */
   setCustomCSS(css: string): void {
     this.customCSS = css;
@@ -36,8 +36,8 @@ export class StyleManager {
   }
 
   /**
-   * 获取当前样式类名
-   * @returns 样式类名
+   * Current style class name
+   * @returns class name
    */
   getCurrentStyleClass(): string {
     if (this.currentStyle === TranslationStyle.LEARNING) {
@@ -51,7 +51,7 @@ export class StyleManager {
   }
 
   /**
-   * 更新自定义样式
+   * Updates the custom style
    */
   private updateCustomStyle(): void {
     if (!this.customStyleElement) {
@@ -60,20 +60,20 @@ export class StyleManager {
       document.head.appendChild(this.customStyleElement);
     }
 
-    // 安全地包装用户CSS，确保只应用到翻译元素
+    // Scope user CSS so it only applies to translation elements
     const safeCSS = this.customCSS?.trim()
       ? `.wxt-style-custom { ${this.customCSS} }`
-      : '.wxt-style-custom { /* 请在设置中添加自定义CSS */ }';
+      : '.wxt-style-custom { /* add custom CSS in settings */ }';
 
     this.customStyleElement.textContent = safeCSS;
   }
 
   /**
-   * 初始化样式
-   * 在页面中注入CSS样式
+   * Injects the CSS
+   * into the page
    */
   private initializeStyles(): void {
-    // 避免重复注入
+    // Avoid injecting twice
     if (this.mainStyleElement) {
       return;
     }
@@ -85,8 +85,8 @@ export class StyleManager {
   }
 
   /**
-   * 清理样式元素
-   * 用于组件卸载时清理DOM
+   * Removes the style element,
+   * e.g. when a component unmounts
    */
   cleanup(): void {
     if (this.mainStyleElement && this.mainStyleElement.parentNode) {
@@ -101,8 +101,8 @@ export class StyleManager {
   }
 
   /**
-   * 重新初始化样式
-   * 用于样式更新或重置
+   * Re-initialises styles
+   * after an update or reset
    */
   reinitialize(): void {
     this.cleanup();

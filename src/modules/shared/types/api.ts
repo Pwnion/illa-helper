@@ -1,6 +1,6 @@
 /**
- * API相关类型定义
- * 包含API配置、翻译请求响应等相关接口
+ * API types:
+ * API configuration and translation request/response interfaces
  */
 
 export enum ApiProtocolFamily {
@@ -8,7 +8,7 @@ export enum ApiProtocolFamily {
   GEMINI = 'gemini',
 }
 
-// 翻译替换结果接口
+// A single word-mode replacement
 export interface Replacement {
   original: string;
   translation: string;
@@ -18,22 +18,22 @@ export interface Replacement {
   };
   isNew: boolean;
   explanation?: string;
-  // 发音相关字段
+  // Pronunciation fields
   hasPhonetic?: boolean;
-  phoneticData?: any; // 将在pronunciation模块中定义具体类型
-  // 新增：语言检测信息
+  phoneticData?: any; // typed in the pronunciation module
+  // Language detection info
   detectedSourceLanguage?: string;
   targetLanguage?: string;
 }
 
-// 全文分析响应接口
+// Full-text analysis response
 export interface FullTextAnalysisResponse {
   original: string;
   processed: string;
   replacements: Replacement[];
 }
 
-// API配置接口
+// API configuration
 export interface ApiConfig {
   apiKey: string;
   apiEndpoint: string;
@@ -43,10 +43,10 @@ export interface ApiConfig {
   includeThinkingParam?: boolean;
   customParams?: string;
   phraseEnabled?: boolean;
-  requestsPerSecond?: number; // 每秒最大请求数
+  requestsPerSecond?: number; // maximum requests per second
 }
 
-// API配置项接口，包含配置的元数据
+// API configuration item with metadata
 export interface ApiConfigItem {
   id: string;
   name: string;
@@ -54,7 +54,7 @@ export interface ApiConfigItem {
   config: ApiConfig;
 }
 
-// 替换配置接口
+// Replacement configuration
 export interface ReplacementConfig {
   userLevel: import('./core').UserLevel;
   replacementRate: number;
@@ -66,13 +66,13 @@ export interface ReplacementConfig {
   translationStyle: import('./core').TranslationStyle;
 }
 
-// 多语言翻译配置接口 - 极简化版本
+// Language pair
 export interface MultilingualConfig {
-  nativeLanguage: string; // 母语 (用户固定设置)
-  targetLanguage: string; // 目标语言 (用户学习目标)
+  nativeLanguage: string; // the user's native language
+  targetLanguage: string; // the language being learned
 }
 
-// 语言选项接口
+// Language option
 export interface LanguageOption {
   code: string;
   name: string;

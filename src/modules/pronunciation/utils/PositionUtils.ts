@@ -1,6 +1,6 @@
 /**
- * 定位工具类
- * 提供悬浮框定位相关的工具方法
+ * Tooltip positioning
+ * helpers
  */
 
 import { UI_CONSTANTS } from '../config';
@@ -15,11 +15,11 @@ export interface PositionResult {
 
 export class PositionUtils {
   /**
-   * 计算悬浮框位置
-   * @param element 目标元素
-   * @param tooltip 悬浮框元素
-   * @param zIndex z-index值
-   * @param position 位置偏好
+   * Positions a tooltip
+   * @param element target element
+   * @param tooltip tooltip element
+   * @param zIndex z-index
+   * @param position preferred position
    */
   static positionTooltip(
     element: HTMLElement,
@@ -27,7 +27,7 @@ export class PositionUtils {
     zIndex: number = UI_CONSTANTS.TOOLTIP_Z_INDEX,
     position: TooltipPosition = 'auto',
   ): void {
-    // 先设置基本样式，让tooltip可以被测量
+    // Apply base styles first so the tooltip can be measured
     tooltip.style.cssText = `
       position: fixed;
       visibility: hidden;
@@ -36,13 +36,13 @@ export class PositionUtils {
 
     const positionResult = this.calculatePosition(element, tooltip, position);
 
-    // 更新箭头样式
+    // Update the arrow
     const arrow = tooltip.querySelector('.wxt-tooltip-arrow');
     if (arrow) {
       arrow.className = positionResult.arrowClass;
     }
 
-    // 应用最终位置
+    // Apply the final position
     tooltip.style.cssText = `
       position: fixed;
       left: ${positionResult.left}px;
@@ -53,10 +53,10 @@ export class PositionUtils {
   }
 
   /**
-   * 计算悬浮框位置
-   * @param element 目标元素
-   * @param tooltip 悬浮框元素
-   * @param position 位置偏好
+   * Calculates the tooltip position
+   * @param element target element
+   * @param tooltip tooltip element
+   * @param position preferred position
    */
   static calculatePosition(
     element: HTMLElement,
@@ -69,7 +69,7 @@ export class PositionUtils {
     const viewportHeight = window.innerHeight;
     const padding = UI_CONSTANTS.TOOLTIP_PADDING;
 
-    // 计算水平位置（居中对齐）
+    // Horizontal position (centred)
     let left = rect.left + (rect.width - tooltipRect.width) / 2;
     if (left < padding) {
       left = padding;
@@ -77,31 +77,31 @@ export class PositionUtils {
       left = viewportWidth - tooltipRect.width - padding;
     }
 
-    // 计算垂直位置
+    // Vertical position
     let top: number;
     let arrowClass: string;
 
     if (position === 'bottom') {
-      // 强制显示在下方
+      // Force below
       top = rect.bottom + 12;
       arrowClass = 'wxt-tooltip-arrow wxt-tooltip-arrow-top';
     } else if (position === 'top') {
-      // 强制显示在上方
+      // Force above
       top = rect.top - tooltipRect.height - 12;
       arrowClass = 'wxt-tooltip-arrow';
     } else {
-      // 自动选择（优先显示在上方）
+      // Automatic (prefer above)
       top = rect.top - tooltipRect.height - 12;
       arrowClass = 'wxt-tooltip-arrow';
 
-      // 如果上方空间不足，显示在下方
+      // Not enough room above: show below
       if (top < padding) {
         top = rect.bottom + 12;
         arrowClass = 'wxt-tooltip-arrow wxt-tooltip-arrow-top';
       }
     }
 
-    // 垂直边界检查
+    // Vertical bounds check
     if (top + tooltipRect.height > viewportHeight - padding) {
       top = viewportHeight - tooltipRect.height - padding;
     }
@@ -110,8 +110,8 @@ export class PositionUtils {
   }
 
   /**
-   * 检查元素是否在视窗内
-   * @param element 目标元素
+   * Whether the element is inside the viewport
+   * @param element target element
    */
   static isElementInViewport(element: HTMLElement): boolean {
     const rect = element.getBoundingClientRect();
@@ -124,8 +124,8 @@ export class PositionUtils {
   }
 
   /**
-   * 获取元素相对于视窗的位置信息
-   * @param element 目标元素
+   * Element position relative to the viewport
+   * @param element target element
    */
   static getElementViewportInfo(element: HTMLElement): {
     rect: DOMRect;

@@ -137,5 +137,8 @@ function isHiddenElement(element: Element): boolean {
 }
 
 function isMostlyPunctuation(text: string): boolean {
-  return /^[\d\s.,!?\-+=()[\]{}:;'"，。！？、（）【】《》]+$/.test(text);
+  // Includes full-width CJK punctuation so symbol-only text on CJK pages is skipped
+  return /^[\d\s.,!?\-+=()[\]{}:;'"\uFF0C\u3002\uFF01\uFF1F\u3001\uFF08\uFF09\u3010\u3011\u300A\u300B]+$/.test(
+    text,
+  );
 }

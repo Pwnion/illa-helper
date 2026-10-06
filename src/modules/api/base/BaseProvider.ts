@@ -1,5 +1,5 @@
 /**
- * 基础翻译提供者抽象类
+ * Base translation provider
  */
 
 import { ApiConfig, FullTextAnalysisResponse } from '../../shared/types/api';
@@ -8,8 +8,8 @@ import { ITranslationProvider } from '../types';
 import { validateInputs, createErrorResponse } from '../utils/apiUtils';
 
 /**
- * 基础Provider抽象类
- * 提供公共的功能和错误处理
+ * Abstract base provider
+ * with shared behaviour and error handling
  */
 export abstract class BaseProvider implements ITranslationProvider {
   protected config: ApiConfig;
@@ -19,7 +19,7 @@ export abstract class BaseProvider implements ITranslationProvider {
   }
 
   /**
-   * 分析全文 - 模板方法
+   * Analyses the full text (template method)
    */
   async analyzeFullText(
     text: string,
@@ -27,7 +27,7 @@ export abstract class BaseProvider implements ITranslationProvider {
   ): Promise<FullTextAnalysisResponse> {
     const originalText = text || '';
 
-    // 验证输入
+    // Validate input
     if (!validateInputs(originalText, this.config.apiKey)) {
       return createErrorResponse(originalText);
     }
@@ -35,13 +35,13 @@ export abstract class BaseProvider implements ITranslationProvider {
     try {
       return await this.doAnalyzeFullText(originalText, settings);
     } catch (error: any) {
-      console.error(`${this.getProviderName()} API请求失败:`, error);
+      console.error(`${this.getProviderName()} API request failed:`, error);
       return createErrorResponse(originalText);
     }
   }
 
   /**
-   * 子类需要实现的具体分析逻辑
+   * Provider-specific analysis implemented by subclasses
    */
   protected abstract doAnalyzeFullText(
     text: string,
@@ -49,12 +49,12 @@ export abstract class BaseProvider implements ITranslationProvider {
   ): Promise<FullTextAnalysisResponse>;
 
   /**
-   * 获取提供者名称（用于日志）
+   * Provider name, used in logs
    */
   protected abstract getProviderName(): string;
 
   /**
-   * 获取配置
+   * Returns the configuration
    */
   protected getConfig(): ApiConfig {
     return this.config;

@@ -18,35 +18,35 @@ import { ContentSegment } from '../processing/ProcessingStateManager';
 import { languageService } from '../core/translation/LanguageService';
 
 /**
- * 翻译显示状态管理器
+ * Translation visibility state manager.
  *
- * 功能：
- * - 通过全局CSS类控制页面翻译内容的显示/隐藏
- * - 支持快捷键和悬浮球的状态切换
- * - 自动同步悬浮球的视觉状态
+ * Responsibilities:
+ * - shows or hides page translations through a global CSS class
+ * - toggles state from the hotkey and the floating ball
+ * - keeps the floating ball's visual state in sync
  *
- * 设计理念：
- * - 使用CSS类控制，避免逐个元素操作，提高性能
- * - 新添加的翻译内容自动继承当前显示状态
- * - 状态变化时实时更新悬浮球视觉反馈
+ * Design:
+ * - a CSS class instead of per-element changes, for performance
+ * - translations added later inherit the current visibility
+ * - the floating ball updates as soon as the state changes
  */
 export class TranslationStateManager {
-  /** 翻译内容是否可见 */
+  /** Whether translations are visible */
   private isTranslationVisible = true;
 
-  /** 页面处理服务引用 */
+  /** Page processing service */
   private processingService?: ProcessingService;
 
-  /** 段落翻译服务引用 */
+  /** Paragraph translation service */
   private paragraphTranslationService?: ParagraphTranslationService;
 
-  /** 悬浮球管理器引用 */
+  /** Floating ball manager */
   private floatingBallManager?: any;
 
-  /** 控制翻译内容隐藏的CSS类名 */
+  /** CSS class that hides translations */
   private readonly HIDDEN_CLASS = 'wxt-translation-hidden';
 
-  /** 翻译内容选择器 */
+  /** Translation selector */
   private readonly TRANSLATION_SELECTOR = '.wxt-translation-term';
 
   constructor(
@@ -60,46 +60,46 @@ export class TranslationStateManager {
   }
 
   /**
-   * 切换翻译显示状态
+   * Toggles translation visibility.
    *
-   * 逻辑：
-   * 1. 如果页面无翻译内容，先执行翻译
-   * 2. 如果有翻译内容，直接切换显示状态
-   * 3. 更新悬浮球视觉状态
+   * Logic:
+   * 1. if the page has no translations yet, translate it
+   * 2. otherwise toggle visibility
+   * 3. update the floating ball
    */
   async toggleTranslationState(): Promise<void> {
     const hasTranslatedContent = this.hasTranslatedContent();
 
     if (!hasTranslatedContent) {
-      // 页面无翻译内容，执行翻译
+      // No translations yet: translate
       await this.executeTranslation();
     } else {
-      // 页面有翻译内容，切换显示状态
+      // Translations exist: toggle visibility
       this.toggleVisibilityState();
     }
 
-    // 同步悬浮球状态
+    // Sync the floating ball
     this.syncFloatingBallState();
   }
 
   /**
-   * 执行页面翻译
+   * Translates the page
    * @private
    */
   private async executeTranslation(): Promise<void> {
-    // 获取用户设置来确定翻译模式
+    // Read settings to pick the translation mode
     const storageService = (
       await import('../core/storage/StorageService')
     ).StorageService.getInstance();
     const settings = await storageService.getUserSettings();
 
     if (settings.translationMode === TranslationMode.PARAGRAPH) {
-      // 段落翻译模式：使用段落翻译服务
+      // Paragraph mode
       if (this.paragraphTranslationService) {
         await this.paragraphTranslationService.start();
       }
     } else {
-      // 单词翻译模式：使用原有的处理服务
+      // Word mode
       if (this.processingService) {
         await this.processingService.processPage();
       }
@@ -110,7 +110,7 @@ export class TranslationStateManager {
   }
 
   /**
-   * 切换可见性状态
+   * Toggles visibility
    * @private
    */
   private toggleVisibilityState(): void {
@@ -124,8 +124,8 @@ export class TranslationStateManager {
   }
 
   /**
-   * 用户显式触发翻译后，结果必须进入可见态。
-   * 动态内容处理不要调用这里，否则用户切到原文模式后会被异步内容强行翻回译文模式。
+   * After an explicit user trigger, results must be visible.
+   * Dynamic content processing must not call this, or async content would force the page back into translation mode after the user switched to the original.
    */
   public showTranslations(): void {
     this.isTranslationVisible = true;
@@ -134,7 +134,7 @@ export class TranslationStateManager {
   }
 
   /**
-   * 同步悬浮球状态
+   * Syncs the floating ball state
    * @private
    */
   private syncFloatingBallState(): void {
@@ -144,15 +144,15 @@ export class TranslationStateManager {
   }
 
   /**
-   * 检查页面是否有翻译内容
+   * Whether the page has translations
    * @private
    */
   private hasTranslatedContent(): boolean {
-    // 检查单词翻译内容
+    // Word translations
     const hasWordTranslation =
       document.querySelector(this.TRANSLATION_SELECTOR) !== null;
 
-    // 检查段落翻译内容
+    // Paragraph translations
     const hasParagraphTranslation =
       document.querySelector('.illa-paragraph-translation') !== null;
 
@@ -160,35 +160,35 @@ export class TranslationStateManager {
   }
 
   /**
-   * 获取当前显示状态
+   * Current visibility
    */
   getTranslationVisibility(): boolean {
     return this.isTranslationVisible;
   }
 
   /**
-   * 清除所有翻译内容（包括段落翻译）
+   * Clears every translation (including paragraph translations)
    */
   public clearAllTranslations(): void {
     try {
-      // 清除段落翻译
+      // Clear paragraph translations
       if (this.paragraphTranslationService) {
         this.paragraphTranslationService.clearAllTranslations();
       }
     } catch (error) {
-      console.error('[ContentManager] 清除翻译失败:', error);
+      console.error('[ContentManager] Failed to clear translations:', error);
     }
   }
 
   /**
-   * 更新处理服务引用
+   * Updates the processing service reference
    */
   updateProcessingService(processingService: ProcessingService): void {
     this.processingService = processingService;
   }
 
   /**
-   * 更新悬浮球管理器引用
+   * Updates the floating ball manager reference
    */
   updateFloatingBallManager(floatingBallManager: any): void {
     this.floatingBallManager = floatingBallManager;
@@ -196,8 +196,8 @@ export class TranslationStateManager {
 }
 
 /**
- * Content Script 主管理服务
- * 负责协调所有子服务，管理生命周期
+ * Main content script manager.
+ * Coordinates every sub-service and manages their lifecycle.
  */
 export class ContentManager implements IContentManager {
   private configurationService: ConfigurationService;
@@ -212,73 +212,77 @@ export class ContentManager implements IContentManager {
   }
 
   /**
-   * 初始化Content Script
+   * Initialises the content script
    */
   async init(): Promise<void> {
     try {
-      // 检查网站规则
+      // Check website rules
       const websiteStatus = await this.checkWebsiteStatus();
       if (websiteStatus === 'blacklisted') {
-        console.log('[ContentManager] 网站在黑名单中，跳过初始化');
+        console.log(
+          '[ContentManager] Site is blacklisted, skipping initialisation',
+        );
         return;
       }
 
-      // 验证配置
+      // Validate the configuration
       await this.validateConfiguration();
 
-      // 获取用户设置
+      // Load user settings
       this.settings = await this.configurationService.getUserSettings();
       if (!this.settings.isEnabled) {
-        console.log('[ContentManager] 扩展已禁用，跳过初始化');
+        console.log(
+          '[ContentManager] Extension disabled, skipping initialisation',
+        );
         return;
       }
 
-      // 处理语言检测
+      // Detect the page language
       await this.handleLanguageDetection();
 
-      // 初始化所有服务
+      // Initialise every service
       await this.initializeServices();
 
-      // 应用初始配置
+      // Apply the initial configuration
       this.applyInitialConfiguration();
 
-      // 初始化悬浮球
+      // Initialise the floating ball
       await this.initializeFloatingBall();
 
-      // 设置监听器
+      // Register listeners
       this.setupListeners();
 
-      // 根据触发模式执行初始处理
+      // Initial processing according to the trigger mode
       await this.handleInitialProcessing(websiteStatus);
     } catch (error) {
-      console.error('[ContentManager] 初始化失败:', error);
+      console.error('[ContentManager] Initialisation failed:', error);
       throw error;
     }
   }
 
   /**
-   * 销毁服务，清理资源
+   * Destroys services and releases resources
    */
   destroy(): void {
     try {
       this.listenerService?.destroy();
       this.services?.lazyLoadingService?.destroy();
-      console.log('[ContentManager] 服务已销毁');
+      console.log('[ContentManager] Services destroyed');
     } catch (error) {
-      console.error('[ContentManager] 销毁服务时出错:', error);
+      console.error('[ContentManager] Error while destroying services:', error);
     }
   }
 
   /**
-   * 更新设置
+   * Applies new settings
    */
   updateSettings(newSettings: UserSettings): void {
     this.settings = newSettings;
 
-    // 更新ProcessingService设置
+    // Update ProcessingService
     this.processingService?.updateSettings(newSettings);
 
-    // 更新配置服务
+    // Update the configuration service
     if (this.services) {
       this.configurationService.updateConfiguration(
         newSettings,
@@ -290,7 +294,7 @@ export class ContentManager implements IContentManager {
   }
 
   /**
-   * 检查网站状态
+   * Returns the website's rule status
    */
   private async checkWebsiteStatus(): Promise<string> {
     const websiteManager = new WebsiteManager();
@@ -298,7 +302,7 @@ export class ContentManager implements IContentManager {
   }
 
   /**
-   * 验证配置
+   * Validates the configuration
    */
   private async validateConfiguration(): Promise<void> {
     await browser.runtime.sendMessage({
@@ -308,13 +312,13 @@ export class ContentManager implements IContentManager {
   }
 
   /**
-   * 处理语言检测
-   * 检测页面语言并确定翻译方向，避免重复计算
+   * Detects the page language
+   * and resolves the translation direction once
    */
   private async handleLanguageDetection(): Promise<void> {
     if (!this.settings) return;
 
-    // 检测页面语言
+    // Detect the page language
     this.detectedPageLanguage = await languageService.detectPageLanguage();
     const targetLanguage = languageService.resolveTargetLanguage(
       this.settings.multilingualConfig,
@@ -322,19 +326,19 @@ export class ContentManager implements IContentManager {
     );
 
     console.log(
-      `[ContentManager] 页面语言: ${this.detectedPageLanguage}, 翻译目标语言: ${targetLanguage}`,
+      `[ContentManager] Page language: ${this.detectedPageLanguage}, target language: ${targetLanguage}`,
     );
   }
 
   /**
-   * 初始化所有核心服务
+   * Initialises every core service
    */
   private async initializeServices(): Promise<void> {
     if (!this.settings) {
       throw new Error('Settings not loaded');
     }
 
-    // 创建服务实例
+    // Create service instances
     const styleManager = new StyleManager();
 
     const activeConfig = this.configurationService.getActiveApiConfig(
@@ -357,10 +361,10 @@ export class ContentManager implements IContentManager {
       ),
     );
 
-    // 创建懒加载服务
+    // Lazy loading service
     const lazyLoadingService = this.initializeLazyLoading(this.settings);
 
-    // 初始化段落翻译服务，传递懒加载服务
+    // Paragraph translation service, with the lazy loading service
     const paragraphTranslationService =
       ParagraphTranslationService.getInstance(lazyLoadingService);
 
@@ -368,17 +372,17 @@ export class ContentManager implements IContentManager {
       this.settings.floatingBall,
     );
 
-    // 保存服务容器
+    // Service container
     this.services = {
       styleManager,
       textProcessor,
       textReplacer,
       floatingBallManager,
       lazyLoadingService,
-      paragraphTranslationService, // 添加段落翻译服务
+      paragraphTranslationService,
     };
 
-    // 创建业务服务
+    // Business services
     this.processingService = new ProcessingService(
       textProcessor,
       textReplacer,
@@ -386,11 +390,11 @@ export class ContentManager implements IContentManager {
       lazyLoadingService,
     );
 
-    // 创建翻译状态管理器
+    // Translation visibility state manager
     this.translationStateManager = new TranslationStateManager(
       this.processingService,
       this.services.floatingBallManager,
-      this.services.paragraphTranslationService, // 直接传入段落翻译服务
+      this.services.paragraphTranslationService,
     );
 
     this.listenerService = new ListenerService(
@@ -407,7 +411,7 @@ export class ContentManager implements IContentManager {
   }
 
   /**
-   * 应用初始配置
+   * Applies the initial configuration
    */
   private applyInitialConfiguration(): void {
     if (!this.settings || !this.services) return;
@@ -421,14 +425,14 @@ export class ContentManager implements IContentManager {
   }
 
   /**
-   * 初始化悬浮球
+   * Initialises the floating ball
    */
   private async initializeFloatingBall(): Promise<void> {
     if (!this.services?.floatingBallManager || !this.translationStateManager)
       return;
 
     await this.services.floatingBallManager.init(async () => {
-      // 悬浮球点击状态切换回调
+      // Floating ball click toggles translation state
       const isConfigValid = await browser.runtime.sendMessage({
         type: 'validate-configuration',
         source: 'user_action',
@@ -441,7 +445,7 @@ export class ContentManager implements IContentManager {
   }
 
   /**
-   * 设置监听器
+   * Registers listeners
    */
   private setupListeners(): void {
     this.listenerService?.setupMessageListeners();
@@ -449,18 +453,18 @@ export class ContentManager implements IContentManager {
   }
 
   /**
-   * 处理初始页面处理
+   * Initial page processing
    */
   private async handleInitialProcessing(websiteStatus: string): Promise<void> {
     if (!this.settings || !this.processingService) return;
 
-    // 根据触发模式或白名单执行操作
+    // Run when whitelisted or in automatic mode
     if (
       websiteStatus === 'whitelisted' ||
       this.settings.triggerMode === TriggerMode.AUTOMATIC
     ) {
       try {
-        // 判断是单词模式还有还是段落翻译
+        // Word mode or paragraph mode
         if (this.settings.translationMode === TranslationMode.PARAGRAPH) {
           const paragraphTranslationService =
             this.services?.paragraphTranslationService;
@@ -468,20 +472,23 @@ export class ContentManager implements IContentManager {
             return;
           }
 
-          // 段落翻译模式
+          // Paragraph mode
           await paragraphTranslationService.start();
         } else {
-          // 单词翻译模式
+          // Word mode
           await this.processingService.processPage();
         }
       } catch (error) {
-        console.error('[ContentManager] 初始页面处理失败:', error);
+        console.error(
+          '[ContentManager] Initial page processing failed:',
+          error,
+        );
       }
     }
   }
 
   /**
-   * 初始化懒加载服务
+   * Initialises the lazy loading service
    */
   private initializeLazyLoading(
     settings: UserSettings,
@@ -493,7 +500,7 @@ export class ContentManager implements IContentManager {
     const lazyLoadingService = new LazyLoadingService(settings.lazyLoading);
     lazyLoadingService.initialize();
 
-    // 设置处理回调
+    // Processing callback
     lazyLoadingService.setProcessingCallback(
       async (segments: ContentSegment[]) => {
         if (this.processingService) {

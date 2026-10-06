@@ -8,7 +8,7 @@ import prettierConfig from 'eslint-config-prettier';
 
 export default defineConfig([
   {
-    ignores: ['**/.wxt/**', '**/.output/**'], // 忽略所有 .wxt 文件
+    ignores: ['**/.wxt/**', '**/.output/**'],
   },
   {
     files: ['**/*.{js,mjs,cjs,ts,mts,cts,vue}'],
@@ -27,16 +27,16 @@ export default defineConfig([
   },
   {
     rules: {
-      // 以下是常见支持 --fix 的规则
-      semi: ['error', 'always'], // 要求分号
-      quotes: ['error', 'single'], // 要求单引号
-      indent: ['error', 2], // 2 空格缩进
-      'comma-dangle': ['error', 'always-multiline'], // 要求多行对象/数组末尾加逗号
-      'no-trailing-spaces': 'error', // 删除行尾空格
-      'eol-last': ['error', 'always'], // 要求文件末尾空行
-      'no-multiple-empty-lines': ['error', { max: 1 }], // 限制连续空行
-      'object-curly-spacing': ['error', 'always'], // 对象花括号内空格
-      'array-bracket-spacing': ['error', 'never'], // 数组括号内无空格
+      // Rules below are auto-fixable with --fix
+      semi: ['error', 'always'],
+      quotes: ['error', 'single'],
+      indent: ['error', 2],
+      'comma-dangle': ['error', 'always-multiline'],
+      'no-trailing-spaces': 'error',
+      'eol-last': ['error', 'always'],
+      'no-multiple-empty-lines': ['error', { max: 1 }],
+      'object-curly-spacing': ['error', 'always'],
+      'array-bracket-spacing': ['error', 'never'],
       'no-unused-vars': 'off',
       '@typescript-eslint/no-empty-object-type': 'off',
       'no-empty': 'off',

@@ -1,5 +1,5 @@
 /**
- * 初始化服务 - 处理扩展安装和启动时的初始化
+ * Initialisation service: runs on extension install and startup
  */
 
 import { browser } from 'wxt/browser';
@@ -22,7 +22,7 @@ export class InitializationService {
   }
 
   /**
-   * 获取单例实例
+   * Returns the singleton instance
    */
   public static getInstance(): InitializationService {
     if (!InitializationService.instance) {
@@ -32,7 +32,7 @@ export class InitializationService {
   }
 
   /**
-   * 处理扩展安装事件
+   * Handles the extension install event
    */
   public async handleInstallation(
     details: chrome.runtime.InstalledDetails,
@@ -53,7 +53,7 @@ export class InitializationService {
     } catch (error) {
       result.success = false;
       result.errors.push(
-        `初始化失败: ${error instanceof Error ? error.message : '未知错误'}`,
+        `Initialisation failed: ${error instanceof Error ? error.message : 'unknown error'}`,
       );
     }
 
@@ -61,66 +61,66 @@ export class InitializationService {
   }
 
   /**
-   * 首次安装设置
+   * First-install setup
    */
   private async performFirstTimeSetup(
     result: InitializationResult,
   ): Promise<void> {
     try {
       await this.storageService.saveUserSettings(DEFAULT_SETTINGS);
-      console.log('默认设置已保存');
+      console.log('Default settings saved');
     } catch (error) {
-      result.errors.push('保存默认设置失败' + error);
-      // 回退方案
+      result.errors.push('Failed to save default settings' + error);
+      // Fallback
       try {
         await browser.storage.sync.set(DEFAULT_SETTINGS);
-        result.warnings.push('使用了备用存储方式');
+        result.warnings.push('Used the fallback storage method');
       } catch (error) {
-        result.errors.push('备用存储方式也失败了' + error);
+        result.errors.push('The fallback storage method also failed' + error);
       }
     }
   }
 
   /**
-   * 初始化右键菜单
+   * Initialises the context menu
    */
   private async initializeMenus(result: InitializationResult): Promise<void> {
     try {
       await this.createContextMenus();
-      console.log('右键菜单初始化完成');
+      console.log('Context menu initialised');
     } catch (error) {
-      result.errors.push('右键菜单初始化失败' + error);
+      result.errors.push('Context menu initialisation failed' + error);
     }
   }
 
   /**
-   * 初始化菜单管理器
+   * Initialises the menu manager
    */
   private async initializeContextMenu(
     result: InitializationResult,
   ): Promise<void> {
     try {
       await this.contextMenuManager.init();
-      console.log('菜单管理器初始化完成');
+      console.log('Menu manager initialised');
     } catch (error) {
-      result.errors.push('菜单管理器初始化失败' + error);
+      result.errors.push('Menu manager initialisation failed' + error);
     }
   }
 
   /**
-   * 创建右键菜单结构
+   * Builds the context menu structure
    */
   private async createContextMenus(): Promise<void> {
     await browser.contextMenus.removeAll();
 
-    // 主菜单项
+    // Root item
     await browser.contextMenus.create({
       id: BACKGROUND_CONSTANTS.MENU_PARENT_ID,
-      title: '浸入式学语言助手',
+      title: 'ILLA Helper',
       contexts: ['page'],
     });
 
-    // 分隔符
+    // Separator
     await browser.contextMenus.create({
       id: 'illa-separator',
       type: 'separator',
@@ -128,30 +128,38 @@ export class InitializationService {
       contexts: ['page'],
     });
 
-    // 其他菜单项...
+    // Other items
     const menuItems = [
       {
         id: 'illa-add-blacklist-domain',
-        title: '添加域名到黑名单',
+        title: 'Add domain to blacklist',
         visible: false,
       },
       {
         id: 'illa-add-blacklist-exact',
-        title: '添加当前页面到黑名单',
+        title: 'Add this page to blacklist',
         visible: false,
       },
-      { id: 'illa-remove-blacklist', title: '从黑名单中移除', visible: false },
+      {
+        id: 'illa-remove-blacklist',
+        title: 'Remove from blacklist',
+        visible: false,
+      },
       {
         id: 'illa-add-whitelist-domain',
-        title: '添加域名到白名单',
+        title: 'Add domain to whitelist',
         visible: false,
       },
       {
         id: 'illa-add-whitelist-exact',
-        title: '添加当前页面到白名单',
+        title: 'Add this page to whitelist',
         visible: false,
       },
-      { id: 'illa-remove-whitelist', title: '从白名单中移除', visible: false },
+      {
+        id: 'illa-remove-whitelist',
+        title: 'Remove from whitelist',
+        visible: false,
+      },
     ];
 
     for (const item of menuItems) {
@@ -164,7 +172,7 @@ export class InitializationService {
       });
     }
 
-    // 设置分隔符和设置菜单
+    // Separator and settings item
     await browser.contextMenus.create({
       id: 'illa-settings-separator',
       type: 'separator',
@@ -174,17 +182,17 @@ export class InitializationService {
 
     await browser.contextMenus.create({
       id: 'illa-open-settings',
-      title: '网站管理设置',
+      title: 'Website rules',
       parentId: BACKGROUND_CONSTANTS.MENU_PARENT_ID,
       contexts: ['page'],
     });
   }
 
   /**
-   * 销毁服务
+   * Destroys the service
    */
   public destroy(): void {
-    console.log('[InitializationService] 服务已销毁');
+    console.log('[InitializationService] Service destroyed');
     InitializationService.instance = null;
   }
 }

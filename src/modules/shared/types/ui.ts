@@ -1,19 +1,19 @@
 /**
- * UI界面相关类型定义
- * 包含悬浮球、快捷键、界面配置等相关接口
+ * UI types:
+ * floating ball, hotkeys and interface configuration
  */
 
-// 快捷键配置接口
+// Hotkey configuration
 export interface TooltipHotkey {
-  enabled: boolean; // 是否启用快捷键要求
-  modifierKeys: string[]; // 修饰键数组 ['ctrl', 'alt', 'shift']
-  key?: string; // 可选的附加键
-  description?: string; // 快捷键描述
+  enabled: boolean; // whether a hotkey is required
+  modifierKeys: string[]; // modifier keys, e.g. ['ctrl', 'alt', 'shift']
+  key?: string; // optional additional key
+  description?: string; // hotkey description
 }
 
-// 悬浮球配置接口
+// Floating ball configuration
 export interface FloatingBallConfig {
-  enabled: boolean; // 是否启用悬浮球
-  position: number; // 垂直位置百分比 (0-100)
-  opacity: number; // 透明度 (0.1-1.0)
+  enabled: boolean; // whether the floating ball is shown
+  position: number; // vertical position as a percentage (0-100)
+  opacity: number; // opacity (0.1-1.0)
 }

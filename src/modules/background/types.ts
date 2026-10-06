@@ -1,11 +1,11 @@
 /**
- * Background 服务相关类型定义
+ * Background service types
  */
 
 import { UserSettings } from '../shared/types/storage';
 
 // ================================
-// 消息类型定义
+// Message types
 // ================================
 
 export interface ShowNotificationMessage {
@@ -67,7 +67,7 @@ export type BackgroundMessage =
   | ManualTranslateMessage;
 
 // ================================
-// API 响应类型定义
+// API response types
 // ================================
 
 export interface ApiSuccessResponse {
@@ -87,7 +87,7 @@ export interface ApiErrorResponse {
 export type ApiResponse = ApiSuccessResponse | ApiErrorResponse;
 
 // ================================
-// 通知相关类型
+// Notification types
 // ================================
 
 export interface NotificationConfig {
@@ -107,7 +107,7 @@ export interface ApiConfigNotificationOptions {
 }
 
 // ================================
-// 命令相关类型
+// Command types
 // ================================
 
 export type ExtensionCommand = 'translate-page';
@@ -118,7 +118,7 @@ export interface CommandHandlerResult {
 }
 
 // ================================
-// 初始化相关类型
+// Initialisation types
 // ================================
 
 export interface InitializationConfig {
@@ -134,7 +134,7 @@ export interface InitializationResult {
 }
 
 // ================================
-// 右键菜单相关类型
+// Context menu types
 // ================================
 
 export interface ContextMenuItemConfig {
@@ -152,7 +152,7 @@ export interface ContextMenuStructure {
 }
 
 // ================================
-// 配置验证相关类型
+// Configuration validation types
 // ================================
 
 export interface ConfigValidationResult {
@@ -166,7 +166,7 @@ export interface ConfigValidationResult {
 }
 
 // ================================
-// 服务配置类型
+// Service configuration types
 // ================================
 
 export interface NotificationServiceConfig {
@@ -194,7 +194,7 @@ export interface BackgroundServiceConfig {
 }
 
 // ================================
-// 错误类型定义
+// Error types
 // ================================
 
 export class BackgroundServiceError extends Error {
@@ -230,7 +230,7 @@ export class ConfigurationError extends BackgroundServiceError {
 }
 
 // ================================
-// 常量定义
+// Constants
 // ================================
 
 export const BACKGROUND_CONSTANTS = {

@@ -1,16 +1,16 @@
 /**
- * 样式模块索引
- * 统一导出所有样式相关的模块和类
+ * Styles module index.
+ * Re-exports every style module and class.
  */
 
-// 导入所有样式常量
+// Style constants
 import { CSS_VARIABLES } from './constants/variables';
 import { BASE_STYLES } from './core/base';
 import { TRANSLATION_STYLES } from './themes/translation';
 import { PRONUNCIATION_STYLES } from './components/pronunciation';
 import { TOOLTIP_STYLES } from './components/tooltip';
 
-// 导出样式常量
+// Re-export style constants
 export {
   CSS_VARIABLES,
   BASE_STYLES,
@@ -19,10 +19,10 @@ export {
   TOOLTIP_STYLES,
 };
 
-// 导出StyleManager类（避免循环依赖）
+// StyleManager is exported separately to avoid a circular dependency
 export { StyleManager } from './core/StyleManager';
 
-// 合并所有样式
+// Combined styles
 export const ALL_STYLES = `
 ${CSS_VARIABLES}
 ${BASE_STYLES}

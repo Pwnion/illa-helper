@@ -1,11 +1,11 @@
 /**
- * 智能内容分段器
+ * Content segmenter.
  *
- * 基于 DomWalker 的段落标记结果，将 DOM 分割为合理的处理单元。
- * 单词翻译和段落翻译共用 DomWalker 获取段落，本模块负责：
- * 1. 将段落转换为 ContentSegment
- * 2. 智能分割长文本
- * 3. 合并碎片化的小段落
+ * Splits the DOM into processing units using the paragraphs labelled by DomWalker.
+ * Word and paragraph translation both get paragraphs from DomWalker; this module:
+ * 1. converts paragraphs into ContentSegments
+ * 2. splits long text
+ * 3. merges fragmented small paragraphs
  */
 
 import {
@@ -34,12 +34,12 @@ export class ContentSegmenter {
   }
 
   /**
-   * 将根节点分割为内容段落
+   * Splits a root node into content segments
    */
   segmentContent(root: Node): ContentSegment[] {
     if (!(root instanceof HTMLElement)) return [];
 
-    // 用 DomWalker 获取所有段落
+    // Collect every paragraph with DomWalker
     const paragraphs = walkAndCollectParagraphs(root);
     const segments: ContentSegment[] = [];
 
@@ -51,7 +51,7 @@ export class ContentSegmenter {
       const domPath = globalProcessingState.generateDomPath(para.element);
 
       if (para.textContent.length <= this.config.maxSegmentLength) {
-        // 短文本 - 单个段落
+        // Short text: a single segment
         const fingerprint = globalProcessingState.generateContentFingerprint(
           para.textContent,
           domPath,
@@ -66,7 +66,7 @@ export class ContentSegmenter {
           domPath,
         });
       } else {
-        // 长文本 - 按文本节点边界分割
+        // Long text: split at text-node boundaries
         const subSegments = this.splitLongText(
           para.textNodes,
           para.element,
@@ -84,7 +84,7 @@ export class ContentSegmenter {
   }
 
   /**
-   * 按文本节点边界分割长文本
+   * Splits long text at text-node boundaries
    */
   private splitLongText(
     textNodes: Text[],
@@ -148,7 +148,7 @@ export class ContentSegmenter {
   }
 
   /**
-   * 合并相邻的小段落
+   * Merges adjacent small segments
    */
   private mergeSmallSegments(segments: ContentSegment[]): ContentSegment[] {
     if (segments.length <= 1) return segments;

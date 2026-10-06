@@ -1,11 +1,11 @@
 /**
- * Background 模块统一导出
+ * Background module exports
  */
 
-// 类型定义
+// Types
 export * from './types';
 
-// 服务
+// Services
 export { NotificationService } from './services/NotificationService';
 export { ApiProxyService } from './services/ApiProxyService';
 export { CommandService } from './services/CommandService';

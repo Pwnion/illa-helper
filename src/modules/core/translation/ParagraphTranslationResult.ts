@@ -17,13 +17,15 @@ export function cleanParagraphTranslationResult(
 
   if (cleanedResult === originalText && originalText.length < 50) {
     console.log(
-      `[ParagraphTranslationApi] 翻译结果与原文相同，可能无需翻译: "${originalText}"`,
+      `[ParagraphTranslationApi] Translation identical to the source; it may not need translating: "${originalText}"`,
     );
     return '';
   }
 
   if (cleanedResult.length < 3) {
-    console.warn(`[ParagraphTranslationApi] 翻译结果过短: "${cleanedResult}"`);
+    console.warn(
+      `[ParagraphTranslationApi] Translation too short: "${cleanedResult}"`,
+    );
     return '';
   }
 

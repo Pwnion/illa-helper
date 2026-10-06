@@ -1,10 +1,10 @@
 /**
- * 段落翻译服务
+ * Paragraph translation service.
  *
- * 设计原则：
- * 1. 使用 DomWalker 统一遍历 DOM，基于计算样式识别段落
- * 2. 直接翻译找到的段落元素
- * 3. 与单词翻译模式共用同一套 DOM 获取逻辑
+ * Design:
+ * 1. DomWalker walks the DOM and identifies paragraphs from computed styles
+ * 2. the paragraphs found are translated directly
+ * 3. the DOM collection logic is shared with the other translation modes
  */
 
 import { StorageService } from '../storage';
@@ -23,26 +23,26 @@ import { selectParagraphTranslationElements } from './ParagraphTranslationSelect
 import { renderParagraphTranslation } from './ParagraphTranslationRenderer';
 
 /**
- * 段落翻译服务类
+ * Paragraph translation service
  */
 export class ParagraphTranslationService {
   private static instance: ParagraphTranslationService | null = null;
   private storageService: StorageService;
   private styleManager: StyleManager;
   private paragraphApi: ParagraphTranslationApi;
-  private lazyLoadingService?: LazyLoadingService; // 懒加载服务
+  private lazyLoadingService?: LazyLoadingService;
 
-  // 翻译状态管理
+  // Translation state
   private isStarting: boolean = false;
   private translatedElements = new WeakSet<HTMLElement>();
-  private translatingElements = new WeakSet<HTMLElement>(); // 正在翻译的元素
+  private translatingElements = new WeakSet<HTMLElement>(); // elements being translated
   private targetLanguage?: string;
 
-  // 并发配置
-  private readonly BATCH_SIZE = 5; // 每批处理5个元素
-  private readonly BATCH_DELAY = 200; // 批次间延迟200ms
+  // Concurrency
+  private readonly BATCH_SIZE = 5; // elements per batch
+  private readonly BATCH_DELAY = 200; // delay between batches (ms)
 
-  // 加载指示器样式
+  // Loading indicator
   private readonly LOADING_CLASS = 'illa-paragraph-loading';
   private readonly LOADING_ICON = `
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -58,7 +58,7 @@ export class ParagraphTranslationService {
     this.paragraphApi = ParagraphTranslationApi.getInstance();
     this.lazyLoadingService = lazyLoadingService;
 
-    // 动态设置翻译风格
+    // Apply the translation style
     this.storageService.getUserSettings().then((settings) => {
       if (settings && settings.translationStyle) {
         this.styleManager.setTranslationStyle(settings.translationStyle);
@@ -67,7 +67,7 @@ export class ParagraphTranslationService {
   }
 
   /**
-   * 获取服务实例（单例模式）
+   * Returns the singleton instance
    */
   public static getInstance(
     lazyLoadingService?: LazyLoadingService,
@@ -80,7 +80,7 @@ export class ParagraphTranslationService {
       lazyLoadingService &&
       !ParagraphTranslationService.instance.lazyLoadingService
     ) {
-      // 如果实例已存在但没有懒加载服务，则更新
+      // Attach the lazy loading service if the existing instance has none
       ParagraphTranslationService.instance.lazyLoadingService =
         lazyLoadingService;
     }
@@ -88,20 +88,20 @@ export class ParagraphTranslationService {
   }
 
   /**
-   * 启动段落翻译
+   * Starts paragraph translation
    */
   public async start(): Promise<number> {
-    console.log('[段落翻译] 开始启动翻译服务...');
+    console.log('[Paragraph translation] Starting...');
 
     if (this.isStarting) {
-      console.warn('[段落翻译] 翻译服务已在运行');
+      console.warn('[Paragraph translation] Already running');
       return 0;
     }
 
     this.isStarting = true;
 
     try {
-      // 每次手动触发都重新读取当前页面和设置。SPA 切路由不会重建 content script。
+      // Re-read the page and settings on every manual trigger; SPA route changes do not recreate the content script.
       const settings = await this.storageService.getUserSettings();
       const pageLanguage = await languageService.detectPageLanguage();
       this.targetLanguage = languageService.resolveTargetLanguage(
@@ -113,12 +113,12 @@ export class ParagraphTranslationService {
         settings?.lazyLoading?.enabled && this.lazyLoadingService?.isEnabled();
 
       if (isLazyLoadingEnabled) {
-        // 懒加载模式只负责注册当前 DOM；可见元素由 LazyLoadingService 后续触发。
-        console.log('[段落翻译] 使用懒加载模式');
+        // Lazy mode only registers the current DOM; LazyLoadingService triggers visible elements later.
+        console.log('[Paragraph translation] Using lazy loading');
         return this.startLazyLoading();
       }
 
-      console.log('[段落翻译] 使用全量翻译模式');
+      console.log('[Paragraph translation] Translating the whole page');
       return this.startFullTranslation();
     } finally {
       this.isStarting = false;
@@ -126,51 +126,51 @@ export class ParagraphTranslationService {
   }
 
   /**
-   * 停止段落翻译
+   * Stops paragraph translation
    */
   public stop(): void {
     this.isStarting = false;
     this.translatedElements = new WeakSet();
-    this.translatingElements = new WeakSet(); // 重置
+    this.translatingElements = new WeakSet();
     this.targetLanguage = undefined;
-    this.clearAllLoadingIndicators(); // 清除
+    this.clearAllLoadingIndicators();
 
-    // 停止懒加载观察
+    // Stop lazy observation
     if (this.lazyLoadingService) {
       this.lazyLoadingService.unobserveSegments([]);
     }
 
-    console.log('[段落翻译] 翻译服务已停止');
+    console.log('[Paragraph translation] Stopped');
   }
 
   /**
-   * 清除所有翻译
+   * Clears every translation
    */
   public clearAllTranslations(): void {
     document
       .querySelectorAll(`.${PARAGRAPH_TRANSLATION.WRAPPER_CLASS}`)
       .forEach((el) => el.remove());
     this.translatedElements = new WeakSet();
-    this.translatingElements = new WeakSet(); // 重置
+    this.translatingElements = new WeakSet();
     this.targetLanguage = undefined;
-    this.clearAllLoadingIndicators(); // 清除
+    this.clearAllLoadingIndicators();
 
-    // 停止懒加载观察
+    // Stop lazy observation
     if (this.lazyLoadingService) {
       this.lazyLoadingService.unobserveSegments([]);
     }
 
-    console.log('[段落翻译] 已清除所有翻译');
+    console.log('[Paragraph translation] All translations cleared');
   }
 
   /**
-   * 查找段落元素 - 基于 DomWalker 统一遍历
+   * Finds paragraph elements using DomWalker
    */
   private findParagraphElements(): HTMLElement[] {
     const paragraphs = walkAndCollectParagraphs(document.body);
     const paragraphElements = selectParagraphTranslationElements(paragraphs);
 
-    // 过滤掉已翻译、正在翻译、文本过短的元素
+    // Skip elements already translated, in progress or too short
     const elements = paragraphElements.filter((element) => {
       if (this.translatedElements.has(element)) return false;
       if (this.translatingElements.has(element)) return false;
@@ -179,48 +179,54 @@ export class ParagraphTranslationService {
       if (!text || text.length < 3) return false;
       if (text.length > 3000) return false;
 
-      // 跳过纯数字或简单符号
+      // Skip numbers and symbols only
       if (/^[\d\s.,!?\-+=()[\]{}]*$/.test(text)) return false;
 
       return true;
     });
 
-    console.log('[段落翻译] 找到段落元素数量:', elements.length);
+    console.log('[Paragraph translation] Paragraphs found:', elements.length);
     return elements;
   }
 
   /**
-   * 翻译元素列表
+   * Translates a list of elements
    */
   private async translateElements(elements: HTMLElement[]): Promise<number> {
     if (elements.length === 0) {
       return 0;
     }
 
-    console.log('[段落翻译] 开始并发翻译，元素数量:', elements.length);
+    console.log(
+      '[Paragraph translation] Translating concurrently, elements:',
+      elements.length,
+    );
 
-    // 分批处理，避免API限流
-    const batchSize = this.BATCH_SIZE; // 每批处理5个元素
+    // Batch to stay under rate limits
+    const batchSize = this.BATCH_SIZE;
     let successCount = 0;
 
     for (let i = 0; i < elements.length; i += batchSize) {
       const batch = elements.slice(i, i + batchSize);
       console.log(
-        `[段落翻译] 处理批次 ${Math.floor(i / batchSize) + 1}/${Math.ceil(elements.length / batchSize)}，元素数量: ${batch.length}`,
+        `[Paragraph translation] Batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(elements.length / batchSize)}, elements: ${batch.length}`,
       );
 
-      // 并发处理当前批次
+      // Translate this batch concurrently
       const batchPromises = batch.map(async (element) => {
         try {
           const success = await this.translateElement(element);
           return success ? 1 : 0;
         } catch (error) {
-          console.error('[段落翻译] 翻译元素失败:', error);
+          console.error(
+            '[Paragraph translation] Element translation failed:',
+            error,
+          );
           return 0;
         }
       });
 
-      // 等待当前批次完成
+      // Wait for the batch
       const batchResults = await Promise.all(batchPromises);
       const batchSuccessCount = batchResults.reduce(
         (sum: number, result: number) => sum + result,
@@ -228,18 +234,18 @@ export class ParagraphTranslationService {
       );
       successCount += batchSuccessCount;
 
-      // 批次间稍微延迟，避免API限流
+      // Short pause between batches to stay under rate limits
       if (i + batchSize < elements.length) {
         await new Promise((resolve) => setTimeout(resolve, this.BATCH_DELAY));
       }
     }
 
-    console.log('[段落翻译] 并发翻译完成，成功数量:', successCount);
+    console.log('[Paragraph translation] Done, succeeded:', successCount);
     return successCount;
   }
 
   /**
-   * 翻译单个元素
+   * Translates one element
    */
   private async translateElement(element: HTMLElement): Promise<boolean> {
     if (
@@ -254,13 +260,13 @@ export class ParagraphTranslationService {
       return false;
     }
 
-    // 标记为正在翻译
+    // Mark as in progress
     this.translatingElements.add(element);
     this.showLoadingIndicator(element);
 
     try {
       console.log(
-        '[段落翻译] 翻译元素:',
+        '[Paragraph translation] Translating element:',
         element.tagName,
         textContent.substring(0, 50),
       );
@@ -271,37 +277,45 @@ export class ParagraphTranslationService {
       );
 
       if (translatedText && translatedText.trim()) {
-        // 先移除加载指示器，再显示翻译结果
+        // Remove the loading indicator before showing the translation
         this.removeLoadingIndicator(element);
         this.translatingElements.delete(element);
 
         this.showTranslation(element, translatedText);
         this.translatedElements.add(element);
-        console.log('[段落翻译] 翻译成功:', element.tagName);
+        console.log('[Paragraph translation] Translated:', element.tagName);
         return true;
       } else {
-        // 移除加载指示器
+        // Remove the loading indicator
         this.removeLoadingIndicator(element);
         this.translatingElements.delete(element);
 
-        console.log('[段落翻译] 翻译结果为空，跳过:', element.tagName);
+        console.log(
+          '[Paragraph translation] Empty result, skipping:',
+          element.tagName,
+        );
         return false;
       }
     } catch (error) {
-      // 移除加载指示器
+      // Remove the loading indicator
       this.removeLoadingIndicator(element);
       this.translatingElements.delete(element);
 
-      console.error('[段落翻译] 翻译失败:', error, '元素:', element.tagName);
+      console.error(
+        '[Paragraph translation] Translation failed:',
+        error,
+        'element:',
+        element.tagName,
+      );
       return false;
     }
   }
 
   /**
-   * 显示翻译结果
+   * Shows the translation
    */
   private showTranslation(element: HTMLElement, translatedText: string): void {
-    // 同一段可能被重复触发，写入前先移除旧结果，保证 DOM 幂等。
+    // A paragraph can be triggered repeatedly; remove old results first so the DOM stays idempotent.
     this.removeAdjacentTranslation(element);
     element
       .querySelectorAll(`.${PARAGRAPH_TRANSLATION.WRAPPER_CLASS}`)
@@ -324,12 +338,12 @@ export class ParagraphTranslationService {
   }
 
   /**
-   * 显示加载指示器
+   * Shows the loading indicator
    */
   private showLoadingIndicator(element: HTMLElement): void {
     this.removeLoadingIndicator(element);
 
-    // 确保全局样式只添加一次
+    // Add the global style only once
     if (!document.getElementById('illa-paragraph-loading-style')) {
       const style = document.createElement('style');
       style.id = 'illa-paragraph-loading-style';
@@ -340,12 +354,12 @@ export class ParagraphTranslationService {
         @keyframes illa-spin {
           100% { transform: rotate(360deg); }
         }
-        /* 确保加载指示器不阻断任何元素的点击事件 */
+        /* The loading indicator never blocks clicks */
         .illa-paragraph-loading {
           pointer-events: none !important;
           user-select: none;
         }
-        /* 特殊处理链接元素的加载指示器 */
+        /* Loading indicator after links */
         a + .illa-paragraph-loading {
           position: relative;
           z-index: 1;
@@ -359,7 +373,7 @@ export class ParagraphTranslationService {
     loadingSpan.classList.add(this.LOADING_CLASS);
     loadingSpan.innerHTML = this.LOADING_ICON;
 
-    // 统一的加载指示器样式，由CSS控制pointer-events
+    // Shared indicator style; CSS controls pointer-events
     loadingSpan.style.cssText = `
       display: inline-block;
       margin-left: 8px;
@@ -367,7 +381,7 @@ export class ParagraphTranslationService {
       opacity: 0.8;
     `;
 
-    // 特殊处理链接元素：减少间距
+    // Links get a smaller gap
     if (element.tagName.toLowerCase() === 'a') {
       loadingSpan.style.marginLeft = '4px';
     }
@@ -376,10 +390,10 @@ export class ParagraphTranslationService {
   }
 
   /**
-   * 移除加载指示器
+   * Removes the loading indicator
    */
   private removeLoadingIndicator(element: HTMLElement): void {
-    // 查找并移除该元素后面的加载指示器
+    // Remove the indicator right after the element
     const nextSibling = element.nextSibling;
     if (nextSibling && nextSibling.nodeType === Node.ELEMENT_NODE) {
       const nextElement = nextSibling as HTMLElement;
@@ -390,7 +404,7 @@ export class ParagraphTranslationService {
   }
 
   /**
-   * 清除所有加载指示器
+   * Removes every loading indicator
    */
   private clearAllLoadingIndicators(): void {
     document
@@ -399,41 +413,43 @@ export class ParagraphTranslationService {
   }
 
   /**
-   * 启动全量翻译
+   * Translates the whole page
    */
   private async startFullTranslation(): Promise<number> {
-    // 查找所有段落元素
+    // Find every paragraph
     const paragraphElements = this.findParagraphElements();
     console.log(
-      '[段落翻译] 全量翻译模式：找到段落元素数量:',
+      '[Paragraph translation] Whole page: paragraphs found:',
       paragraphElements.length,
     );
 
-    // 翻译段落元素
+    // Translate them
     const result = await this.translateElements(paragraphElements);
-    console.log('[段落翻译] 翻译完成，结果:', result);
+    console.log('[Paragraph translation] Done, result:', result);
     return result;
   }
 
   /**
-   * 启动懒加载翻译
+   * Starts lazy translation
    */
   private async startLazyLoading(): Promise<number> {
     if (!this.lazyLoadingService) {
-      console.warn('[段落翻译] 懒加载服务未初始化，回退到全量翻译');
+      console.warn(
+        '[Paragraph translation] Lazy loading service missing, translating the whole page',
+      );
       return this.startFullTranslation();
     }
 
-    // 查找所有段落元素并转换为 ContentSegment
+    // Find paragraphs and convert them to ContentSegments
     const paragraphElements = this.findParagraphElements();
     const segments = this.convertToContentSegments(paragraphElements);
 
     console.log(
-      '[段落翻译] 懒加载模式：找到段落元素数量:',
+      '[Paragraph translation] Lazy mode: paragraphs found:',
       paragraphElements.length,
     );
 
-    // 设置懒加载回调
+    // Lazy loading callback
     this.lazyLoadingService.setProcessingCallback(
       async (visibleSegments: ContentSegment[]) => {
         const elementsToTranslate = visibleSegments.map(
@@ -443,14 +459,14 @@ export class ParagraphTranslationService {
       },
     );
 
-    // 开始观察段落
+    // Start observing
     this.lazyLoadingService.observeSegments(segments);
 
     return segments.length;
   }
 
   /**
-   * 将段落元素转换为 ContentSegment
+   * Converts paragraph elements to ContentSegments
    */
   private convertToContentSegments(elements: HTMLElement[]): ContentSegment[] {
     return elements.map((element, index) => {
@@ -476,7 +492,7 @@ export class ParagraphTranslationService {
   }
 
   /**
-   * 获取统计信息
+   * Statistics
    */
   public getStats(): { total: number; translated: number } {
     const total = document.querySelectorAll(

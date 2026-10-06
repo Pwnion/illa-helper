@@ -1,20 +1,20 @@
 /**
- * 悬浮球模块入口
+ * Floating ball module entry point
  */
 
-// 导出类型
+// Types
 export type {
   FloatingBallConfig,
   FloatingBallState,
   FloatingBallEventType,
 } from './types';
 
-// 导出配置
+// Configuration
 export {
   DEFAULT_FLOATING_BALL_CONFIG,
   FLOATING_BALL_STYLES,
   DRAG_CONFIG,
 } from './config';
 
-// 导出管理器
+// Manager
 export { FloatingBallManager } from './managers/FloatingBallManager';
