@@ -70,3 +70,17 @@ function clampInt(
 ): number {
   return Math.round(clampNumber(value, min, max, fallback));
 }
+
+/**
+ * A copy of the settings with sentenceMode normalised, for saving. Never
+ * mutates its input: writing the normalised object back into reactive
+ * settings re-triggers a deep watcher on them, forever.
+ */
+export function withNormalizedSentenceMode<
+  T extends { sentenceMode?: Partial<SentenceModeConfig> },
+>(settings: T): T & { sentenceMode: SentenceModeConfig } {
+  return {
+    ...settings,
+    sentenceMode: normalizeSentenceModeConfig(settings.sentenceMode),
+  };
+}

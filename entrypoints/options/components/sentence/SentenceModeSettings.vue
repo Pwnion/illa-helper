@@ -304,7 +304,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, ref, toRaw, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { StorageService } from '@/src/modules/core/storage';
 import { languageService } from '@/src/modules/core/translation/LanguageService';
@@ -316,7 +316,10 @@ import {
   GRAMMAR_TAGS,
   type GrammarTagId,
 } from '@/src/modules/sentence/grammar';
-import { normalizeSentenceModeConfig } from '@/src/modules/sentence/config';
+import {
+  normalizeSentenceModeConfig,
+  withNormalizedSentenceMode,
+} from '@/src/modules/sentence/config';
 import { LEMMA_STATUSES, type LemmaRecord } from '@/src/modules/sentence/types';
 import {
   countByStatus,
@@ -372,6 +375,9 @@ const counts = computed(() => countByStatus(records.value));
 
 onMounted(async () => {
   settings.value = await storageService.getUserSettings();
+  // Let the watcher see the loaded settings before saving is enabled, so
+  // opening the tab doesn't write them straight back.
+  await nextTick();
   loaded.value = true;
   await refresh();
 });
@@ -380,14 +386,14 @@ watch(
   settings,
   async (newSettings) => {
     if (!loaded.value) return;
-    newSettings.sentenceMode = normalizeSentenceModeConfig(
-      newSettings.sentenceMode,
-    );
-    await storageService.saveUserSettings(newSettings);
+    // Save a normalised plain copy. Assigning it back into `settings` would
+    // re-trigger this deep watcher on every run and lock up the page.
+    const toSave = withNormalizedSentenceMode(toRaw(newSettings));
+    await storageService.saveUserSettings(toSave);
     emit('saveMessage', t('settings.save'));
     browser.runtime.sendMessage({
       type: 'settings_updated',
-      settings: newSettings,
+      settings: toSave,
     });
   },
   { deep: true },
