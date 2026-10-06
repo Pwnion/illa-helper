@@ -30,6 +30,7 @@ import AppearanceSettings from './appearance/AppearanceSettings.vue';
 import DataManagement from './data/DataManagement.vue';
 import About from './about/About.vue';
 import HotkeySettings from './basic/HotkeySettings.vue';
+import SentenceModeSettings from './sentence/SentenceModeSettings.vue';
 
 interface Props {
   currentSection: string;
@@ -46,6 +47,7 @@ const emit = defineEmits<{
 const componentMap: Record<string, any> = {
   basic: BasicSettings,
   translation: TranslationSettings,
+  'sentence-mode': SentenceModeSettings,
   'website-management': WebsiteManagement,
   floating: AppearanceSettings,
   hotkey: HotkeySettings,

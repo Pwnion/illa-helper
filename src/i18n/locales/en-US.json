@@ -37,7 +37,9 @@
     "switchConfigFailed": "Failed to switch configuration"
   },
   "actions": {
-    "translate": "Translate"
+    "translate": "Translate",
+    "restore": "Restore",
+    "restoreHint": "Remove sentence and paragraph translations and restore the original page"
   },
   "language": {
     "nativeLanguage": "Native Language",
@@ -226,12 +228,14 @@
     "selectUserLevel": "Please select your language level",
     "replacementRate": "Replacement Rate",
     "translationMode": "Translation Mode",
-    "translationModeDescription": "Choose translation method: word mode (partial replacement) or paragraph mode (full translation)",
+    "translationModeDescription": "Choose how pages are translated: word mode (partial replacement), sentence mode (whole sentences at your level) or paragraph mode (full translation)",
     "translationModes": {
       "word": "Word Translation Mode",
       "wordDescription": "Intelligently select partial words for translation, maintaining original text structure, suitable for language learning",
       "paragraph": "Paragraph Translation Mode",
-      "paragraphDescription": "Translate entire paragraphs, displaying complete translations, suitable for content comprehension"
+      "paragraphDescription": "Translate entire paragraphs, displaying complete translations, suitable for content comprehension",
+      "sentence": "Sentence Translation Mode",
+      "sentenceDescription": "Replace whole sentences you can read at your level, so you learn word order and grammar as well as words"
     },
     "lazyLoading": {}
   },
@@ -435,7 +439,7 @@
     }
   },
   "options": {
-    "title": "Immersive Language Learning Helper (illa-helper)",
+    "title": "ILLA Helper",
     "toggleTheme": "Toggle Theme",
     "basic": "Basic",
     "translation": "Translation",
@@ -462,7 +466,55 @@
       "data": "Import/Export",
       "dataDescription": "Configuration backup and recovery",
       "about": "About",
-      "aboutDescription": "Version information and help"
-    }
+      "aboutDescription": "Version information and help",
+      "sentenceMode": "Sentence Mode",
+      "sentenceModeDescription": "Sentence selection, grammar and known words"
+    },
+    "sentenceMode": "Sentence Mode"
+  },
+  "sentenceMode": {
+    "title": "Sentence Mode",
+    "description": "Sentences are translated and analysed once, then shown only when you can read them. Settings here apply the next time a page is translated.",
+    "maxNewWords": "New words allowed per sentence",
+    "maxNewWordsHint": "A sentence is shown only if it has at most this many words you do not know yet.",
+    "coldStartLevel": "Assume words up to this level are known",
+    "coldStartLevelHint": "Applies to words you have never seen. Words you have marked or learned always use your own record.",
+    "noColdStart": "None (only words I have marked known)",
+    "pageCap": "Maximum share of a page to replace",
+    "pageCapHint": "Limits how many of a page's sentences are replaced, even if more are at your level.",
+    "noCap": "no cap",
+    "grammarTitle": "Unlocked grammar",
+    "grammarHint": "A sentence is shown only if every grammar feature it uses is unlocked. Unlock more as you learn them.",
+    "beginnerDefaults": "Beginner defaults",
+    "unlockAll": "Unlock all",
+    "lockAll": "Lock all",
+    "learningTitle": "Learning",
+    "learningHint": "A replaced sentence you read for long enough without hovering or revealing it counts as one exposure for each of its words. After enough exposures in a row a word becomes known.",
+    "exposuresToKnow": "Exposures before a word is known",
+    "minDwellMs": "Minimum reading time (ms)",
+    "dwellMsPerWord": "Reading time per word (ms)",
+    "requestsTitle": "Requests and cache",
+    "batchChars": "Characters per request",
+    "batchCharsHint": "Whole sentences are packed into requests of about this size. Larger batches mean fewer requests but longer waits.",
+    "cachedAnalyses": "{count} sentence analyses cached",
+    "clearCache": "Clear cache",
+    "cacheCleared": "Analysis cache cleared",
+    "knownWordsTitle": "Known words ({language})",
+    "knownWordsHint": "Stored on this device only. Counts are for your current target language.",
+    "status": {
+      "seen": "Seen",
+      "unknown": "Unknown",
+      "learning": "Learning",
+      "known": "Known"
+    },
+    "import": "Import words",
+    "importHint": "One word per line, optionally followed by a tab and a status (known, learning, unknown or seen). The default status is known. CSV and JSON exports can be imported too.",
+    "importButton": "Import",
+    "importFile": "Choose file...",
+    "imported": "Imported {count} words",
+    "exportCsv": "Export CSV",
+    "exportJson": "Export JSON",
+    "reset": "Reset known words",
+    "resetConfirm": "Delete every known-word record for {language}? This cannot be undone."
   }
 }

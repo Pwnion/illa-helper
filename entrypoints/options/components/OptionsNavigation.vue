@@ -102,6 +102,7 @@ import {
   Download,
   Info,
   Keyboard,
+  BookOpen,
 } from 'lucide-vue-next';
 import NavigationGroup from './NavigationGroup.vue';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
@@ -159,6 +160,12 @@ const advancedFeatures = computed<NavigationItem[]>(() => [
     label: t('options.navigation.translation'),
     icon: Languages,
     description: t('options.navigation.translationDescription'),
+  },
+  {
+    key: 'sentence-mode',
+    label: t('options.navigation.sentenceMode'),
+    icon: BookOpen,
+    description: t('options.navigation.sentenceModeDescription'),
   },
 ]);
 

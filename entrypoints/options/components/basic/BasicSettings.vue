@@ -193,6 +193,22 @@
                   </div>
                 </div>
                 <div class="flex items-start space-x-2">
+                  <RadioGroupItem id="mode-sentence" value="sentence" />
+                  <div class="grid gap-1.5 leading-none">
+                    <Label
+                      for="mode-sentence"
+                      class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      {{ $t('basicSettings.translationModes.sentence') }}
+                    </Label>
+                    <p class="text-xs text-muted-foreground">
+                      {{
+                        $t('basicSettings.translationModes.sentenceDescription')
+                      }}
+                    </p>
+                  </div>
+                </div>
+                <div class="flex items-start space-x-2">
                   <RadioGroupItem id="mode-paragraph" value="paragraph" />
                   <div class="grid gap-1.5 leading-none">
                     <Label

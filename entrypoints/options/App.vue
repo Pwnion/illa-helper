@@ -82,6 +82,7 @@ const isMobile = ref(false);
 const sectionTitles: Record<string, string> = {
   basic: t('options.basic'),
   translation: t('options.translation'),
+  'sentence-mode': t('options.sentenceMode'),
   'website-management': t('options.websiteManagement'),
   floating: t('options.floating'),
   hotkey: t('options.hotkey'),

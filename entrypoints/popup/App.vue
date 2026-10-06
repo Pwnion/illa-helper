@@ -176,6 +176,20 @@ const handleTranslate = async () => {
   }
 };
 
+const handleRestore = async () => {
+  try {
+    const tabs = await browser.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
+    if (tabs[0]?.id) {
+      await browser.tabs.sendMessage(tabs[0].id, { type: 'RESTORE_PAGE' });
+    }
+  } catch (error) {
+    console.error('Failed to restore the page:', error);
+  }
+};
+
 const openAdvancedSettings = () => {
   const url = browser.runtime.getURL('/options.html#about');
   window.open(url);
@@ -295,6 +309,13 @@ const nativeLanguageOptions = computed(() =>
           :title="$t('actions.translate')"
         >
           {{ $t('actions.translate') }}
+        </button>
+        <button
+          @click="handleRestore"
+          class="manual-translate-btn"
+          :title="$t('actions.restoreHint')"
+        >
+          {{ $t('actions.restore') }}
         </button>
       </div>
     </header>
