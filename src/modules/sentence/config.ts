@@ -2,13 +2,22 @@
  * Sentence mode defaults and settings normalisation.
  */
 
-import { BEGINNER_GRAMMAR, isGrammarTagId } from './grammar';
+import {
+  BEGINNER_ADDED_IN_V2,
+  BEGINNER_GRAMMAR,
+  GRAMMAR_TAG_IDS,
+  GRAMMAR_TAG_SET_VERSION,
+  SPLIT_FROM_V1,
+  isGrammarTagId,
+  type GrammarTagId,
+} from './grammar';
 import type { SentenceModeConfig } from './types';
 
 export const DEFAULT_SENTENCE_MODE_CONFIG: SentenceModeConfig = {
   maxNewWords: 1,
   coldStartLevel: 2, // A2
   unlockedGrammar: [...BEGINNER_GRAMMAR],
+  grammarTagSetVersion: GRAMMAR_TAG_SET_VERSION,
   pageCap: 1,
   dwellMsPerWord: 300,
   minDwellMs: 1500,
@@ -31,9 +40,8 @@ export function normalizeSentenceModeConfig(
       6,
       defaults.coldStartLevel,
     ),
-    unlockedGrammar: Array.isArray(source.unlockedGrammar)
-      ? [...new Set(source.unlockedGrammar.filter(isGrammarTagId))]
-      : [...defaults.unlockedGrammar],
+    unlockedGrammar: normalizeUnlockedGrammar(source),
+    grammarTagSetVersion: GRAMMAR_TAG_SET_VERSION,
     pageCap: clampNumber(source.pageCap, 0, 1, defaults.pageCap),
     dwellMsPerWord: clampInt(
       source.dwellMsPerWord,
@@ -50,6 +58,25 @@ export function normalizeSentenceModeConfig(
     ),
     batchChars: clampInt(source.batchChars, 200, 8000, defaults.batchChars),
   };
+}
+
+function normalizeUnlockedGrammar(
+  source: Partial<SentenceModeConfig>,
+): GrammarTagId[] {
+  if (!Array.isArray(source.unlockedGrammar)) {
+    return [...DEFAULT_SENTENCE_MODE_CONFIG.unlockedGrammar];
+  }
+  const unlocked = new Set(source.unlockedGrammar.filter(isGrammarTagId));
+
+  // Settings saved before version 2 predate the split and added tags
+  if ((source.grammarTagSetVersion ?? 1) < 2) {
+    for (const [oldTag, newTag] of Object.entries(SPLIT_FROM_V1)) {
+      if (unlocked.has(oldTag as GrammarTagId) && newTag) unlocked.add(newTag);
+    }
+    for (const tag of BEGINNER_ADDED_IN_V2) unlocked.add(tag);
+  }
+
+  return GRAMMAR_TAG_IDS.filter((id) => unlocked.has(id));
 }
 
 function clampNumber(

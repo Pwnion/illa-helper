@@ -39,7 +39,7 @@ Because the analysis doesn't depend on your level, the same cached analysis yiel
 Under **Options → Sentence Mode**:
 
 - **Selection:** new words allowed per sentence, cold-start level, and an optional cap on the share of a page replaced.
-- **Grammar:** which features are unlocked. Beginner defaults are present tense, imperative, modal verbs, infinitive with *att*, definite suffix, questions and verb-second inversion. Unlocking past tense and perfect makes far more sentences eligible.
+- **Grammar:** which features are unlocked. There are 31 tags covering tenses, verb types, word order, and noun and adjective forms. Beginner defaults are present tense, imperative, modal verbs, infinitive with *att*, questions, verb-second inversion, dummy subject *det*, definite suffix, adjective agreement, possessive pronouns and adverbs in *-t*. Unlocking past tense and perfect makes far more sentences eligible.
 - **Learning:** exposure threshold and reading times.
 - **Requests:** batch size, and a button to clear the analysis cache.
 - **Known words:** counts by status, import (one word per line, optionally followed by a tab and a status, or this extension's CSV/JSON export), export as CSV or JSON, and reset.

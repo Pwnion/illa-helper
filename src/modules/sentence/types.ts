@@ -74,6 +74,8 @@ export interface SentenceModeConfig {
   coldStartLevel: number;
   /** A sentence is only shown when every grammar tag on it is unlocked */
   unlockedGrammar: GrammarTagId[];
+  /** Tag set unlockedGrammar was saved against, for migrating split tags */
+  grammarTagSetVersion: number;
   /** Fraction of a page's sentences that may be replaced; 1 means no cap */
   pageCap: number;
   /** Reading time credited per word before a view counts as an exposure */

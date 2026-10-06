@@ -31,6 +31,7 @@ describe('normalizeSentenceModeConfig', () => {
       batchChars: 50,
       dwellMsPerWord: Number.NaN,
       unlockedGrammar: ['past', 'past', 'bogus' as never],
+      grammarTagSetVersion: 2,
     });
     expect(config).toMatchObject({
       maxNewWords: 0,
@@ -40,6 +41,50 @@ describe('normalizeSentenceModeConfig', () => {
       batchChars: 200,
       dwellMsPerWord: DEFAULT_SENTENCE_MODE_CONFIG.dwellMsPerWord,
       unlockedGrammar: ['past'],
+    });
+  });
+
+  describe('grammar tag set migration', () => {
+    it('unlocks both halves of a split tag and the new beginner tags', () => {
+      const config = normalizeSentenceModeConfig({
+        unlockedGrammar: ['pres', 'refl', 'pass', 'participle'],
+      });
+      expect(config.grammarTagSetVersion).toBe(2);
+      expect([...config.unlockedGrammar].sort()).toEqual(
+        [
+          'pres',
+          'refl',
+          'reflposs',
+          'pass',
+          'blipass',
+          'participle',
+          'prespart',
+          'formalsubj',
+          'adjagr',
+          'poss',
+          'adverb',
+        ].sort(),
+      );
+    });
+
+    it('leaves the other new tags locked', () => {
+      const config = normalizeSentenceModeConfig({ unlockedGrammar: ['pres'] });
+      expect(config.unlockedGrammar).not.toContain('cleft');
+      expect(config.unlockedGrammar).not.toContain('indirectq');
+      expect(config.unlockedGrammar).not.toContain('reflposs');
+    });
+
+    it('does not migrate settings already on version 2', () => {
+      const config = normalizeSentenceModeConfig({
+        unlockedGrammar: ['refl'],
+        grammarTagSetVersion: 2,
+      });
+      expect(config.unlockedGrammar).toEqual(['refl']);
+    });
+
+    it('is stable when normalised again', () => {
+      const once = normalizeSentenceModeConfig({ unlockedGrammar: ['pass'] });
+      expect(normalizeSentenceModeConfig(once)).toEqual(once);
     });
   });
 });

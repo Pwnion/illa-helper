@@ -11,7 +11,7 @@
 
 import { GRAMMAR_TAGS } from './grammar';
 
-export const PROMPT_VERSION = 2;
+export const PROMPT_VERSION = 3;
 
 export interface PromptLanguages {
   /** Display names, e.g. "English", "Swedish" */
