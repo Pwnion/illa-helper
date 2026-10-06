@@ -257,6 +257,16 @@ export class LazyLoadingService {
   }
 
   /**
+   * Forgets every observed and processed segment so a page can be translated
+   * again after its translations were removed
+   */
+  reset(): void {
+    if (this.isDestroyed) return;
+    this.stopAllObservation();
+    this.state.processedSegments.clear();
+  }
+
+  /**
    * Stops all observation
    */
   private stopAllObservation(): void {

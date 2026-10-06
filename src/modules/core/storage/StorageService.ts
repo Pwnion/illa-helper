@@ -18,6 +18,7 @@ import {
   ApiProtocolFamily,
 } from '../../shared/types/api';
 import { DEFAULT_SETTINGS } from '../../shared/constants/defaults';
+import { normalizeSentenceModeConfig } from '../../sentence/config';
 import {
   normalizeApiProtocolFamily,
   sanitizeApiConfig,
@@ -482,6 +483,10 @@ export class StorageService {
       if (!validatedSettings.lazyLoading) {
         validatedSettings.lazyLoading = DEFAULT_SETTINGS.lazyLoading;
       }
+
+      validatedSettings.sentenceMode = normalizeSentenceModeConfig(
+        validatedSettings.sentenceMode,
+      );
 
       return validatedSettings;
     } catch (error) {

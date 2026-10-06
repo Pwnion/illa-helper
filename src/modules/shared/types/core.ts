@@ -78,6 +78,7 @@ export enum TranslationPosition {
 // Translation mode
 export enum TranslationMode {
   WORD = 'word', // words and phrases replaced inline
+  SENTENCE = 'sentence', // whole sentences at the learner's level replaced inline
   PARAGRAPH = 'paragraph', // full translation under each paragraph
 }
 

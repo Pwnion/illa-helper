@@ -8,6 +8,7 @@ import { StyleManager } from '@/src/modules/styles';
 import { TextProcessorService } from '@/src/modules/core/translation/TextProcessorService';
 import { TextReplacerService } from '@/src/modules/core/translation/TextReplacerService';
 import { ParagraphTranslationService } from '@/src/modules/core/translation/ParagraphTranslationService';
+import type { SentenceTranslationService } from '../sentence/SentenceTranslationService';
 import { FloatingBallManager } from '@/src/modules/floatingBall';
 import { LazyLoadingService } from './services/LazyLoadingService';
 
@@ -63,6 +64,7 @@ export interface ServiceContainer {
   floatingBallManager: FloatingBallManager;
   lazyLoadingService?: LazyLoadingService;
   paragraphTranslationService: ParagraphTranslationService;
+  sentenceTranslationService: SentenceTranslationService;
 }
 
 /**

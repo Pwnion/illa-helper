@@ -13,6 +13,7 @@ import type { FloatingBallConfig, TooltipHotkey } from '../types/ui';
 import type { UserSettings } from '../types/storage';
 import type { LazyLoadingConfig } from '../types/core';
 import { createEmptyApiConfig } from '../ApiConfigHelpers';
+import { DEFAULT_SENTENCE_MODE_CONFIG } from '../../sentence/config';
 import {
   UserLevel,
   TranslationStyle,
@@ -91,4 +92,5 @@ export const DEFAULT_SETTINGS: UserSettings = {
   apiRequestTimeout: 0, // no timeout
   customTranslationCSS: '',
   lazyLoading: DEFAULT_LAZY_LOADING_CONFIG,
+  sentenceMode: DEFAULT_SENTENCE_MODE_CONFIG,
 };

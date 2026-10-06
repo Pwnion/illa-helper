@@ -1522,7 +1522,8 @@ export class FloatingBallManager {
   private hasTranslatedContent(): boolean {
     return (
       document.querySelector('.wxt-translation-term') !== null ||
-      document.querySelector('.illa-paragraph-translation') !== null
+      document.querySelector('.illa-paragraph-translation') !== null ||
+      document.querySelector('.illa-st') !== null
     );
   }
 

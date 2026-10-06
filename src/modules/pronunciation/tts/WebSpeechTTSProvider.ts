@@ -10,7 +10,7 @@ export class WebSpeechTTSProvider implements ITTSProvider {
   readonly name = 'web-speech';
 
   private config: TTSProviderConfig;
-  private synthesis: SpeechSynthesis;
+  private synthesis: SpeechSynthesis | null;
   private voices: SpeechSynthesisVoice[] = [];
   private isInitialized = false;
   private currentUtterance: SpeechSynthesisUtterance | null = null;
@@ -23,8 +23,11 @@ export class WebSpeechTTSProvider implements ITTSProvider {
       volume: 1.0,
       ...config,
     };
-    this.synthesis = window.speechSynthesis;
-    this.initialize();
+    this.synthesis =
+      typeof window !== 'undefined' && 'speechSynthesis' in window
+        ? window.speechSynthesis
+        : null;
+    void this.initialize();
   }
 
   private async initialize(): Promise<void> {
@@ -35,22 +38,25 @@ export class WebSpeechTTSProvider implements ITTSProvider {
   }
 
   private loadVoices(): Promise<void> {
+    const synthesis = this.synthesis;
+    if (!synthesis) return Promise.resolve();
+
     return new Promise((resolve) => {
       const loadVoicesHandler = () => {
-        this.voices = this.synthesis.getVoices();
+        this.voices = synthesis.getVoices();
         if (this.voices.length > 0) {
           resolve();
         }
       };
 
       // Some browsers populate the voice list asynchronously
-      if (this.synthesis.getVoices().length > 0) {
+      if (synthesis.getVoices().length > 0) {
         loadVoicesHandler();
       } else {
-        this.synthesis.onvoiceschanged = loadVoicesHandler;
+        synthesis.onvoiceschanged = loadVoicesHandler;
         setTimeout(() => {
           if (this.voices.length === 0) {
-            this.voices = this.synthesis.getVoices();
+            this.voices = synthesis.getVoices();
           }
           resolve();
         }, 1000);
@@ -68,6 +74,10 @@ export class WebSpeechTTSProvider implements ITTSProvider {
           success: false,
           error: 'Invalid text',
         };
+      }
+      const synthesis = this.synthesis;
+      if (!synthesis) {
+        return { success: false, error: 'Speech synthesis is unavailable' };
       }
 
       await this.initialize();
@@ -103,7 +113,7 @@ export class WebSpeechTTSProvider implements ITTSProvider {
           });
         };
 
-        this.synthesis.speak(utterance);
+        synthesis.speak(utterance);
       });
     } catch (error) {
       this.currentUtterance = null;
@@ -115,18 +125,18 @@ export class WebSpeechTTSProvider implements ITTSProvider {
   }
 
   stop(): void {
-    if (this.synthesis.speaking) {
+    if (this.synthesis?.speaking) {
       this.synthesis.cancel();
     }
     this.currentUtterance = null;
   }
 
   isSpeaking(): boolean {
-    return this.synthesis.speaking;
+    return this.synthesis?.speaking ?? false;
   }
 
   isAvailable(): boolean {
-    return 'speechSynthesis' in window;
+    return this.synthesis !== null;
   }
 
   updateConfig(config: Partial<TTSProviderConfig>): void {

@@ -16,6 +16,7 @@ import type {
 } from './core';
 import type { ApiConfigItem, MultilingualConfig } from './api';
 import type { TooltipHotkey, FloatingBallConfig } from './ui';
+import type { SentenceModeConfig } from '../../sentence/types';
 
 // User settings
 export interface UserSettings {
@@ -48,6 +49,8 @@ export interface UserSettings {
   customTranslationCSS: string;
   // Lazy loading
   lazyLoading: LazyLoadingConfig;
+  // Sentence mode selection and learning settings
+  sentenceMode: SentenceModeConfig;
 }
 
 // Context menu message

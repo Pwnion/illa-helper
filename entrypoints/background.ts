@@ -14,6 +14,11 @@ import {
   BACKGROUND_CONSTANTS,
 } from '@/src/modules/background/types';
 import { MessageType } from '@/src/modules/core/messaging/types';
+import { SentenceStore } from '@/src/modules/sentence/store/SentenceStore';
+import {
+  SENTENCE_STORE_MESSAGE,
+  handleSentenceStoreRequest,
+} from '@/src/modules/sentence/store/SentenceStoreClient';
 
 export default defineBackground(() => {
   // Service instances
@@ -23,6 +28,8 @@ export default defineBackground(() => {
   const commandService = CommandService.getInstance();
   const initializationService = InitializationService.getInstance();
   const updateCheckService = UpdateCheckService.getInstance();
+  // Sentence mode's cache and known words live in the extension origin
+  const sentenceStore = new SentenceStore();
 
   /**
    * Initialises every service
@@ -90,6 +97,10 @@ export default defineBackground(() => {
 
       case MessageType.CONTEXT_MENU_ACTION:
         handleContextMenuAction(message, sendResponse);
+        return true; // keep the message channel open
+
+      case SENTENCE_STORE_MESSAGE:
+        handleSentenceStoreRequest(sentenceStore, message).then(sendResponse);
         return true; // keep the message channel open
 
       // Update check messages

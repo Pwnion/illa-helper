@@ -19,6 +19,8 @@ const EXTENSION_RESULT_SELECTOR = [
   '.wxt-processing',
   '.illa-paragraph-translation',
   '.illa-paragraph-loading',
+  '.illa-st',
+  '.illa-sentence-tooltip',
 ].join(',');
 
 const PROCESSED_ATTRIBUTES = [

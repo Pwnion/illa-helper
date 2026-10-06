@@ -5,6 +5,7 @@ import { StyleManager } from '@/src/modules/styles';
 import { TextProcessorService } from '@/src/modules/core/translation/TextProcessorService';
 import { TextReplacerService } from '@/src/modules/core/translation/TextReplacerService';
 import { ParagraphTranslationService } from '@/src/modules/core/translation/ParagraphTranslationService';
+import { SentenceTranslationService } from '@/src/modules/sentence/SentenceTranslationService';
 
 import { FloatingBallManager } from '@/src/modules/floatingBall';
 import { WebsiteManager } from '@/src/modules/options/website-management/manager';
@@ -40,6 +41,9 @@ export class TranslationStateManager {
   /** Paragraph translation service */
   private paragraphTranslationService?: ParagraphTranslationService;
 
+  /** Sentence translation service */
+  private sentenceTranslationService?: SentenceTranslationService;
+
   /** Floating ball manager */
   private floatingBallManager?: any;
 
@@ -53,10 +57,12 @@ export class TranslationStateManager {
     processingService?: ProcessingService,
     floatingBallManager?: any,
     paragraphTranslationService?: ParagraphTranslationService,
+    sentenceTranslationService?: SentenceTranslationService,
   ) {
     this.processingService = processingService;
     this.floatingBallManager = floatingBallManager;
     this.paragraphTranslationService = paragraphTranslationService;
+    this.sentenceTranslationService = sentenceTranslationService;
   }
 
   /**
@@ -98,6 +104,8 @@ export class TranslationStateManager {
       if (this.paragraphTranslationService) {
         await this.paragraphTranslationService.start();
       }
+    } else if (settings.translationMode === TranslationMode.SENTENCE) {
+      await this.sentenceTranslationService?.start();
     } else {
       // Word mode
       if (this.processingService) {
@@ -156,7 +164,12 @@ export class TranslationStateManager {
     const hasParagraphTranslation =
       document.querySelector('.illa-paragraph-translation') !== null;
 
-    return hasWordTranslation || hasParagraphTranslation;
+    // Sentence translations
+    const hasSentenceTranslation = document.querySelector('.illa-st') !== null;
+
+    return (
+      hasWordTranslation || hasParagraphTranslation || hasSentenceTranslation
+    );
   }
 
   /**
@@ -167,14 +180,16 @@ export class TranslationStateManager {
   }
 
   /**
-   * Clears every translation (including paragraph translations)
+   * Clears paragraph translations and restores the original DOM for sentence
+   * translations
    */
   public clearAllTranslations(): void {
     try {
-      // Clear paragraph translations
-      if (this.paragraphTranslationService) {
-        this.paragraphTranslationService.clearAllTranslations();
-      }
+      this.paragraphTranslationService?.clearAllTranslations();
+      this.sentenceTranslationService?.restore();
+      this.isTranslationVisible = true;
+      document.body.classList.remove(this.HIDDEN_CLASS);
+      this.syncFloatingBallState();
     } catch (error) {
       console.error('[ContentManager] Failed to clear translations:', error);
     }
@@ -368,6 +383,9 @@ export class ContentManager implements IContentManager {
     const paragraphTranslationService =
       ParagraphTranslationService.getInstance(lazyLoadingService);
 
+    const sentenceTranslationService =
+      SentenceTranslationService.getInstance(lazyLoadingService);
+
     const floatingBallManager = new FloatingBallManager(
       this.settings.floatingBall,
     );
@@ -380,6 +398,7 @@ export class ContentManager implements IContentManager {
       floatingBallManager,
       lazyLoadingService,
       paragraphTranslationService,
+      sentenceTranslationService,
     };
 
     // Business services
@@ -395,6 +414,7 @@ export class ContentManager implements IContentManager {
       this.processingService,
       this.services.floatingBallManager,
       this.services.paragraphTranslationService,
+      this.services.sentenceTranslationService,
     );
 
     this.listenerService = new ListenerService(
@@ -404,6 +424,7 @@ export class ContentManager implements IContentManager {
       styleManager,
       textReplacer,
       paragraphTranslationService,
+      sentenceTranslationService,
       floatingBallManager,
       this.translationStateManager,
       this.detectedPageLanguage,
@@ -464,7 +485,6 @@ export class ContentManager implements IContentManager {
       this.settings.triggerMode === TriggerMode.AUTOMATIC
     ) {
       try {
-        // Word mode or paragraph mode
         if (this.settings.translationMode === TranslationMode.PARAGRAPH) {
           const paragraphTranslationService =
             this.services?.paragraphTranslationService;
@@ -474,6 +494,8 @@ export class ContentManager implements IContentManager {
 
           // Paragraph mode
           await paragraphTranslationService.start();
+        } else if (this.settings.translationMode === TranslationMode.SENTENCE) {
+          await this.services?.sentenceTranslationService?.start();
         } else {
           // Word mode
           await this.processingService.processPage();

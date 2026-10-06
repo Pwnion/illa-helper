@@ -4,6 +4,7 @@ import { ConfigurationService } from './ConfigurationService';
 import { StyleManager } from '../../styles';
 import { TextReplacerService } from '../../core/translation/TextReplacerService';
 import { ParagraphTranslationService } from '../../core/translation/ParagraphTranslationService';
+import { SentenceTranslationService } from '../../sentence/SentenceTranslationService';
 import { FloatingBallManager } from '../../floatingBall';
 import { IListenerService } from '../types';
 import { isProcessingResultNode, isDescendant } from '../utils/domUtils';
@@ -20,6 +21,7 @@ export class ListenerService implements IListenerService {
   private styleManager: StyleManager;
   private textReplacer: TextReplacerService;
   private paragraphService: ParagraphTranslationService;
+  private sentenceService: SentenceTranslationService;
   private floatingBallManager: FloatingBallManager;
   private translationStateManager: TranslationStateManager;
   private pageLanguage?: string;
@@ -33,6 +35,7 @@ export class ListenerService implements IListenerService {
     styleManager: StyleManager,
     textReplacer: TextReplacerService,
     paragraphService: ParagraphTranslationService,
+    sentenceService: SentenceTranslationService,
     floatingBallManager: FloatingBallManager,
     translationStateManager: TranslationStateManager,
     pageLanguage?: string,
@@ -43,6 +46,7 @@ export class ListenerService implements IListenerService {
     this.styleManager = styleManager;
     this.textReplacer = textReplacer;
     this.paragraphService = paragraphService;
+    this.sentenceService = sentenceService;
     this.floatingBallManager = floatingBallManager;
     this.translationStateManager = translationStateManager;
     this.pageLanguage = pageLanguage;
@@ -120,6 +124,8 @@ export class ListenerService implements IListenerService {
         this.translationStateManager.showTranslations();
         this.ensureDomObserver();
       }
+    } else if (message.type === 'RESTORE_PAGE') {
+      this.translationStateManager.clearAllTranslations();
     }
   }
 
@@ -147,6 +153,11 @@ export class ListenerService implements IListenerService {
   private async startConfiguredTranslation(): Promise<void> {
     if (this.settings.translationMode === TranslationMode.PARAGRAPH) {
       await this.paragraphService.start();
+      return;
+    }
+
+    if (this.settings.translationMode === TranslationMode.SENTENCE) {
+      await this.sentenceService.start();
       return;
     }
 
@@ -182,6 +193,7 @@ export class ListenerService implements IListenerService {
       this.pageLanguage,
     );
     this.processingService.updateSettings(this.settings);
+    this.sentenceService.updateSettings(this.settings);
     this.floatingBallManager.updateConfig(this.settings.floatingBall);
   }
 
@@ -197,7 +209,9 @@ export class ListenerService implements IListenerService {
       mutations.forEach((mutation) => {
         if (mutation.type === 'childList') {
           mutation.addedNodes.forEach((node) => {
-            if (isProcessingResultNode(node)) return;
+            if (isProcessingResultNode(node) || isSentenceModeNode(node)) {
+              return;
+            }
 
             if (isTranslationCandidateNode(node, 16)) {
               nodesToProcess.add(node);
@@ -278,6 +292,40 @@ export class ListenerService implements IListenerService {
       return;
     }
 
+    if (this.settings.translationMode === TranslationMode.SENTENCE) {
+      await this.sentenceService.processNode(node);
+      return;
+    }
+
     await this.processingService.processNode(node);
   }
+}
+
+/**
+ * Nodes created by sentence mode's own rendering: wrapped originals, and text
+ * nodes split off inside them or next to them.
+ */
+function isSentenceModeNode(node: Node): boolean {
+  const element =
+    node.nodeType === Node.ELEMENT_NODE
+      ? (node as Element)
+      : node.parentElement;
+  if (!element) return false;
+  if (element.closest('.illa-st, .illa-so, .illa-sentence-tooltip')) {
+    return true;
+  }
+  // Split text nodes are siblings of a wrapped original
+  return (
+    node.nodeType === Node.TEXT_NODE &&
+    (isSentenceWrapper(node.previousSibling) ||
+      isSentenceWrapper(node.nextSibling))
+  );
+}
+
+function isSentenceWrapper(node: Node | null): boolean {
+  return (
+    !!node &&
+    node.nodeType === Node.ELEMENT_NODE &&
+    (node as Element).matches('.illa-st, .illa-so')
+  );
 }
