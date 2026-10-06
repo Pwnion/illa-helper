@@ -213,7 +213,7 @@
             <Button>⭐ {{ $t('about.starOnGitHub') }}</Button>
           </a>
           <a
-            href="https://github.com/xiao-zaiyi/illa-helper/issues"
+            href="https://github.com/Pwnion/illa-helper/issues"
             target="_blank"
           >
             <Button variant="outline">
@@ -221,10 +221,7 @@
               {{ $t('about.reportIssue') }}
             </Button>
           </a>
-          <a
-            href="https://github.com/xiao-zaiyi/illa-helper/pulls"
-            target="_blank"
-          >
+          <a href="https://github.com/Pwnion/illa-helper/pulls" target="_blank">
             <Button variant="outline">
               <GitPullRequest class="w-4 h-4 mr-2" />
               {{ $t('about.contribute') }}

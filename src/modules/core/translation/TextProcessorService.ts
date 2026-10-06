@@ -10,6 +10,7 @@ import {
 import { ApiConfigItem } from '../../shared/types/api';
 import { PronunciationService } from '../../pronunciation/services/PronunciationService';
 import { DEFAULT_PRONUNCIATION_CONFIG } from '../../pronunciation/config';
+import { getSpeechLocale, supportsPhonetics } from '../../shared/speechLocale';
 import { ContentSegmenter } from '../../processing/ContentSegmenter';
 import { ProcessingCoordinator } from '../../processing/ProcessingCoordinator';
 import { globalProcessingState } from '../../processing/ProcessingStateManager';
@@ -34,6 +35,10 @@ export interface TextProcessorConfig {
   enablePronunciationTooltip?: boolean;
   apiConfigItem?: ApiConfigItem | null;
   segmentConfig?: Partial<SegmentConfig>;
+  /** Learner's native language; dictionary glosses are written in it */
+  nativeLanguage?: string;
+  /** Language translations are written in; drives speech voice and phonetics */
+  targetLanguage?: string;
 }
 
 /**
@@ -87,11 +92,17 @@ export class TextProcessorService {
    */
   private initializeServices(): void {
     // 创建发音服务配置
+    const targetLanguage = this.config.targetLanguage || 'sv';
     const pronunciationConfig = {
       ...DEFAULT_PRONUNCIATION_CONFIG,
+      ttsConfig: {
+        ...DEFAULT_PRONUNCIATION_CONFIG.ttsConfig,
+        lang: getSpeechLocale(targetLanguage),
+      },
       uiConfig: {
         ...DEFAULT_PRONUNCIATION_CONFIG.uiConfig,
         tooltipEnabled: this.config.enablePronunciationTooltip ?? true,
+        showPhonetic: supportsPhonetics(targetLanguage),
       },
     };
 
@@ -99,6 +110,10 @@ export class TextProcessorService {
     this.pronunciationService = new PronunciationService(
       pronunciationConfig,
       this.config.apiConfigItem ?? null,
+    );
+    this.pronunciationService.setLanguages(
+      this.config.nativeLanguage || 'en',
+      targetLanguage,
     );
     this.contentSegmenter = new ContentSegmenter();
     this.processingCoordinator = new ProcessingCoordinator(

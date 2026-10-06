@@ -15,7 +15,6 @@ export const TIMER_CONSTANTS = {
   SHOW_DELAY: 300, // 显示延迟（毫秒）
   HIDE_DELAY: 600, // 隐藏延迟（毫秒）
   WORD_SHOW_DELAY: 100, // 单词悬浮框显示延迟（毫秒）
-  YOUDAO_TIMEOUT: 10000, // 有道TTS超时时间（毫秒）
 } as const;
 
 // CSS类名常量
@@ -40,7 +39,6 @@ export const SVG_ICONS = {
 
 // API相关常量
 export const API_CONSTANTS = {
-  YOUDAO_TTS_BASE_URL: 'https://dict.youdao.com/dictvoice',
   DICTIONARY_API_BASE_URL: 'https://api.dictionaryapi.dev/api/v2/entries/en/',
   AI_TRANSLATION_CACHE_TTL: 86400000, // AI翻译缓存24小时
 } as const;

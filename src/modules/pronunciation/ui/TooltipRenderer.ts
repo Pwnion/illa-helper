@@ -1,8 +1,8 @@
 /**
- * 发音悬浮框渲染器。
+ * Pronunciation tooltip renderer.
  *
- * 这个模块只负责创建 DOM 结构和更新已有 DOM。页面文本、AI 返回和远程错误
- * 都必须通过 textContent 写入，避免把不可信内容拼进 HTML。
+ * Only builds and updates DOM. Page text, AI output and remote errors are
+ * always written through textContent so untrusted content never becomes HTML.
  */
 
 import { PronunciationElementData } from '../types';
@@ -53,7 +53,7 @@ export class TooltipRenderer {
         this.createOriginalTextElement(
           elementData.originalText,
           'wxt-phrase-original',
-          '原文：',
+          'Original: ',
         ),
       );
     }
@@ -64,7 +64,7 @@ export class TooltipRenderer {
       header.appendChild(
         this.createAudioButton(
           'wxt-audio-btn wxt-phrase-audio-btn',
-          '朗读短语',
+          'Speak phrase',
           16,
         ),
       );
@@ -110,13 +110,15 @@ export class TooltipRenderer {
       );
     }
 
-    wordInfo.appendChild(
-      this.createPhoneticRow(
-        phonetic?.phonetics[0]?.text,
-        phonetic?.error?.hasPhoneticError,
-        phonetic?.error?.phoneticErrorMessage,
-      ),
-    );
+    if (this.uiConfig.showPhonetic) {
+      wordInfo.appendChild(
+        this.createPhoneticRow(
+          phonetic?.phonetics[0]?.text,
+          phonetic?.error?.hasPhoneticError,
+          phonetic?.error?.phoneticErrorMessage,
+        ),
+      );
+    }
     wordInfo.appendChild(
       this.createMeaningContainer(phonetic?.aiTranslation?.explain),
     );
@@ -124,7 +126,7 @@ export class TooltipRenderer {
 
     if (this.uiConfig.showPlayButton) {
       header.appendChild(
-        this.createAudioButton('wxt-audio-btn', '朗读单词', 16),
+        this.createAudioButton('wxt-audio-btn', 'Speak word', 16),
       );
     }
 
@@ -146,14 +148,17 @@ export class TooltipRenderer {
     titleRow.appendChild(this.createElement('div', 'wxt-word-main', word));
 
     const accentButtons = this.createElement('div', 'wxt-accent-buttons');
-    accentButtons.appendChild(this.createAccentGroup('英', 'uk', '英式发音'));
-    accentButtons.appendChild(this.createAccentGroup('美', 'us', '美式发音'));
+    accentButtons.appendChild(
+      this.createAudioButton('wxt-accent-audio-btn', 'Speak word', 12),
+    );
     titleRow.appendChild(accentButtons);
 
     wordInfo.appendChild(titleRow);
-    wordInfo.appendChild(
-      this.createPhoneticRow(phoneticText, hasError, errorMessage),
-    );
+    if (this.uiConfig.showPhonetic) {
+      wordInfo.appendChild(
+        this.createPhoneticRow(phoneticText, hasError, errorMessage),
+      );
+    }
     wordInfo.appendChild(this.createMeaningContainer());
     header.appendChild(wordInfo);
     card.appendChild(header);
@@ -230,11 +235,15 @@ export class TooltipRenderer {
       return this.createElement(
         'div',
         'wxt-phonetic-error',
-        errorMessage || '音标获取失败',
+        errorMessage || 'Phonetics unavailable',
       );
     }
 
-    return this.createElement('div', 'wxt-phonetic-loading', '获取音标中...');
+    return this.createElement(
+      'div',
+      'wxt-phonetic-loading',
+      'Loading phonetics...',
+    );
   }
 
   private createMeaningContainer(meaning?: string): HTMLElement {
@@ -242,7 +251,11 @@ export class TooltipRenderer {
     container.appendChild(
       meaning
         ? this.createElement('div', 'wxt-meaning-text', meaning)
-        : this.createElement('div', 'wxt-meaning-loading', '获取词义中...'),
+        : this.createElement(
+            'div',
+            'wxt-meaning-loading',
+            'Loading meaning...',
+          ),
     );
     return container;
   }
@@ -250,24 +263,9 @@ export class TooltipRenderer {
   private createOriginalTextElement(
     originalText: string,
     className = 'wxt-original-text',
-    label = '原文: ',
+    label = 'Original: ',
   ): HTMLElement {
     return this.createElement('div', className, `${label}${originalText}`);
-  }
-
-  private createAccentGroup(
-    label: string,
-    accent: 'uk' | 'us',
-    title: string,
-  ): HTMLElement {
-    const group = this.createElement('div', 'wxt-accent-group');
-    group.appendChild(this.createElement('span', 'wxt-accent-label', label));
-
-    const button = this.createAudioButton('wxt-accent-audio-btn', title, 12);
-    button.setAttribute('data-accent', accent);
-    group.appendChild(button);
-
-    return group;
   }
 
   private createAudioButton(

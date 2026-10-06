@@ -35,8 +35,8 @@ export const DEFAULT_API_CONFIG: ApiConfig = {
 
 // 默认多语言配置 - 极简化版本
 export const DEFAULT_MULTILINGUAL_CONFIG: MultilingualConfig = {
-  nativeLanguage: 'zh', // 默认中文为母语
-  targetLanguage: 'en', // 默认英语为目标语言
+  nativeLanguage: 'en',
+  targetLanguage: 'sv',
 };
 
 // 默认发音快捷键配置

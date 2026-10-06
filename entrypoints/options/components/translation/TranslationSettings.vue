@@ -409,11 +409,8 @@
                 <SelectItem value="openai">
                   {{ $t('translationSettings.openai') }}
                 </SelectItem>
-                <SelectItem value="deepseek">
-                  {{ $t('translationSettings.deepseek') }}
-                </SelectItem>
-                <SelectItem value="silicon-flow">
-                  {{ $t('translationSettings.siliconFlow') }}
+                <SelectItem value="anthropic">
+                  {{ $t('translationSettings.anthropic') }}
                 </SelectItem>
                 <SelectItem value="gemini">
                   {{ $t('translationSettings.googleGemini') }}

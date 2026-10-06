@@ -325,7 +325,12 @@ const nativeLanguageOptions = computed(() =>
                     :key="option.code"
                     :value="option.code"
                   >
-                    {{ option.name }} - {{ option.nativeName }}
+                    {{ option.name
+                    }}{{
+                      option.nativeName !== option.name
+                        ? ` - ${option.nativeName}`
+                        : ''
+                    }}
                   </option>
                 </optgroup>
                 <optgroup :label="$t('language.otherLanguages')">
@@ -336,7 +341,12 @@ const nativeLanguageOptions = computed(() =>
                     :key="option.code"
                     :value="option.code"
                   >
-                    {{ option.name }} - {{ option.nativeName }}
+                    {{ option.name
+                    }}{{
+                      option.nativeName !== option.name
+                        ? ` - ${option.nativeName}`
+                        : ''
+                    }}
                   </option>
                 </optgroup>
               </select>
@@ -356,7 +366,12 @@ const nativeLanguageOptions = computed(() =>
                     :key="option.code"
                     :value="option.code"
                   >
-                    {{ option.name }} - {{ option.nativeName }}
+                    {{ option.name
+                    }}{{
+                      option.nativeName !== option.name
+                        ? ` - ${option.nativeName}`
+                        : ''
+                    }}
                   </option>
                 </optgroup>
                 <optgroup :label="$t('language.otherLanguages')">
@@ -367,7 +382,12 @@ const nativeLanguageOptions = computed(() =>
                     :key="option.code"
                     :value="option.code"
                   >
-                    {{ option.name }} - {{ option.nativeName }}
+                    {{ option.name
+                    }}{{
+                      option.nativeName !== option.name
+                        ? ` - ${option.nativeName}`
+                        : ''
+                    }}
                   </option>
                 </optgroup>
               </select>

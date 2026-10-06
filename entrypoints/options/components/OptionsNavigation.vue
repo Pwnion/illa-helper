@@ -185,7 +185,7 @@ const managementTools = computed<NavigationItem[]>(() => [
 ]);
 
 const handleLogoClick = () => {
-  window.open('https://illa.xlike.cc', '_blank');
+  window.open('https://github.com/Pwnion/illa-helper', '_blank');
 };
 
 // 检查设备是否为移动端

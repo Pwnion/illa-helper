@@ -1,16 +1,10 @@
 /**
- * AI翻译提供者实现
+ * AI dictionary provider.
  *
- * 该类使用AI大模型API为英语单词提供中文翻译服务，完全替代了原有的有道词典API，
- * 解决了浏览器扩展中的跨域访问问题。提供者实现了完整的缓存机制、错误处理和
- * 超时控制，确保翻译服务的稳定性和性能。
- *
- * 主要特性：
- * - 使用专门优化的AI提示词获取准确的中文释义
- * - 实现24小时TTL缓存机制减少API调用
- * - 完善的错误处理和超时控制
- * - 支持动态API配置更新
- * - 使用统一的UniversalApiService进行API调用
+ * Looks up a target-language word or phrase with the configured LLM and
+ * returns a short gloss in the learner's native language plus the grammar a
+ * learner needs (gender and inflections for nouns, principal parts for verbs).
+ * Results are cached in memory for 24 hours per language pair and API config.
  */
 
 import { AITranslationResult, AITranslationEntry, CacheEntry } from '../types';
@@ -18,66 +12,99 @@ import { ApiConfigItem } from '../../shared/types/api';
 import { API_CONSTANTS } from '../config';
 import { cleanMarkdownFromResponse } from '@/src/utils';
 import { UniversalApiService } from '../../api/services/UniversalApiService';
+import { languageService } from '../../core/translation/LanguageService';
+
+/**
+ * Per-language grammar instructions. Languages without an entry get the
+ * generic guidance, which still asks for gender and principal parts where the
+ * language has them.
+ */
+const GRAMMAR_GUIDANCE: Record<string, string> = {
+  sv: `- Nouns: give the gender article (en/ett) and the four forms: indefinite singular, definite singular, indefinite plural, definite plural (e.g. "en katt, katten, katter, katterna").
+- Verbs: give the infinitive, present, past (preteritum) and supine (e.g. "skriva, skriver, skrev, skrivit"). Treat particle verbs as one unit with the particle (e.g. "tycka om, tycker om, tyckte om, tyckt om") and note when the particle is stressed.
+- Adjectives: give the common, neuter (-t) and plural/definite (-a) forms, plus irregular comparison if any.
+- s-verbs (deponents like "hoppas", "finnas"): say so.`,
+};
+
+const GENERIC_GRAMMAR_GUIDANCE = `- Nouns: give grammatical gender or noun class and the key inflected forms (e.g. plural, definite form) where the language has them.
+- Verbs: give the principal parts a learner must memorise. Treat separable, particle and reflexive verbs as one unit.
+- Adjectives: give agreement forms or irregular comparison if the language has them.`;
+
+export function buildDictionaryPrompt(
+  nativeLanguage: string,
+  targetLanguage: string,
+): string {
+  const nativeName = languageName(nativeLanguage);
+  const targetName = languageName(targetLanguage);
+  const baseTarget = targetLanguage.toLowerCase().split(/[-_]/)[0];
+  const guidance = GRAMMAR_GUIDANCE[baseTarget] || GENERIC_GRAMMAR_GUIDANCE;
+
+  return `You are a concise bilingual dictionary for a ${nativeName} speaker learning ${targetName}.
+The user sends one ${targetName} word or short phrase as it appeared on a web page (it may be inflected).
+
+Reply in plain text, no markdown, at most 3 short lines:
+1. Dictionary form, part of speech, and meaning(s) in ${nativeName}, most common first, separated by semicolons.
+2. The grammar a learner needs for this word:
+${guidance}
+3. Optional: one very short usage note in ${nativeName}. Omit the line if there is nothing useful to say.
+
+If the input is not ${targetName}, give its meaning in ${nativeName} on one line and stop.`;
+}
+
+function languageName(code: string): string {
+  return languageService.getLanguage(code)?.name || code;
+}
 
 export class AITranslationProvider {
-  /** 提供者名称标识 */
   readonly name = 'ai-translation';
 
-  /** AI API配置项，必须保留 id，确保请求使用明确配置。 */
+  /** The API config must keep its id so requests use an explicit config. */
   private apiConfigItem: ApiConfigItem | null;
 
-  /** API请求超时时间（毫秒） */
+  /** Request timeout in milliseconds; 0 means no limit */
   private timeout: number = 0;
 
-  /** 内存缓存，存储翻译结果以减少API调用 */
+  private nativeLanguage = 'en';
+  private targetLanguage = 'sv';
+
   private cache = new Map<string, CacheEntry<AITranslationEntry>>();
 
-  /** 缓存生存时间，24小时TTL */
   private readonly cacheTTL = API_CONSTANTS.AI_TRANSLATION_CACHE_TTL;
 
-  /** UniversalApiService 实例 */
   private universalApi: UniversalApiService;
 
-  /**
-   * 构造函数
-   *
-   * @param apiConfigItem - AI API配置项，包含配置ID、协议族和请求配置
-   * @param timeout - API请求超时时间（毫秒），默认0（无限制）
-   */
   constructor(apiConfigItem: ApiConfigItem | null, timeout: number = 0) {
     this.apiConfigItem = apiConfigItem;
     this.timeout = timeout;
     this.universalApi = UniversalApiService.getInstance();
   }
 
+  setLanguages(nativeLanguage: string, targetLanguage: string): void {
+    if (
+      nativeLanguage === this.nativeLanguage &&
+      targetLanguage === this.targetLanguage
+    ) {
+      return;
+    }
+    this.nativeLanguage = nativeLanguage;
+    this.targetLanguage = targetLanguage;
+    this.cache.clear();
+  }
+
   /**
-   * 获取单词的中文词义翻译
-   *
-   * 该方法是AI翻译提供者的核心功能，通过调用UniversalApiService获取英语单词的
-   * 中文释义。实现了完整的缓存策略、错误处理和超时控制。
-   *
-   * 处理流程：
-   * 1. 输入参数验证和文本清理
-   * 2. 检查内存缓存，命中则直接返回
-   * 3. 使用UniversalApiService调用AI获取翻译结果
-   * 4. 解析响应并存入缓存
-   *
-   * @param word - 要翻译的英语单词
-   * @returns Promise<AITranslationResult> - 翻译结果，包含成功状态、数据和缓存标识
+   * Returns a gloss and grammar notes for a target-language word or phrase.
    */
   async getMeaning(word: string): Promise<AITranslationResult> {
     try {
-      // 数据验证
       if (!word || typeof word !== 'string') {
         return {
           success: false,
-          error: '单词参数无效',
+          error: 'Invalid word',
         };
       }
 
       const cleanWord = word.toLowerCase().trim();
 
-      // 检查缓存
       const cached = this.getFromCache(cleanWord);
       if (cached) {
         return {
@@ -89,44 +116,30 @@ export class AITranslationProvider {
 
       const apiConfig = this.apiConfigItem?.config;
 
-      // 发音翻译必须使用明确配置，不能隐式回退到全局活跃配置。
+      // Lookups must use an explicit config rather than silently falling back
+      // to whichever config is globally active.
       if (!this.apiConfigItem || !apiConfig) {
         return {
           success: false,
-          error: '未找到可用的AI API配置',
+          error: 'No AI API configuration available',
         };
       }
 
-      // 验证API配置
       if (!apiConfig.apiKey) {
         return {
           success: false,
-          error: 'AI API配置不完整：缺少API Key',
+          error: 'Incomplete AI API configuration: missing API key',
         };
       }
 
-      // 构建专门用于单词翻译的AI提示词
-      const systemPrompt = `你是一个专业的英语词典助手。请为用户提供准确、简洁的中文词义解释。
-要求：
-1. 只返回单词的中文释义，格式为：词性 + 释义
-2. 如果有多个词性，用分号分隔
-3. 释义要简洁准确，适合快速理解
-4. 不要包含例句或其他额外信息
-5. 返回格式为纯文本，不要JSON
-
-示例：
-输入：hello
-输出：interj. 你好；n. 打招呼
-
-输入：beautiful
-输出：adj. 美丽的，漂亮的`;
-
-      // 使用UniversalApiService调用AI
       const result = await this.universalApi.call(cleanWord, {
-        systemPrompt,
+        systemPrompt: buildDictionaryPrompt(
+          this.nativeLanguage,
+          this.targetLanguage,
+        ),
         configId: this.apiConfigItem.id,
         temperature: apiConfig.temperature || 0,
-        maxTokens: 100,
+        maxTokens: 200,
         timeout: this.timeout,
         customParams: apiConfig.customParams,
       });
@@ -134,14 +147,12 @@ export class AITranslationProvider {
       if (!result.success) {
         return {
           success: false,
-          error: result.error || 'AI翻译请求失败',
+          error: result.error || 'AI dictionary request failed',
         };
       }
 
-      // 解析AI响应
       const meaningInfo = this.parseAIResponse(result.content, cleanWord);
 
-      // 存入缓存
       this.setCache(cleanWord, meaningInfo);
 
       return {
@@ -150,20 +161,16 @@ export class AITranslationProvider {
         cached: false,
       };
     } catch (error) {
-      console.error('AI翻译获取词义失败:', error);
+      console.error('AI dictionary lookup failed:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : '未知错误',
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
 
-  /**
-   * 检查提供者是否可用
-   */
   async isAvailable(): Promise<boolean> {
     try {
-      // 检查API配置
       if (!this.apiConfigItem?.config?.apiKey) {
         return false;
       }
@@ -174,22 +181,16 @@ export class AITranslationProvider {
     }
   }
 
-  /**
-   * 获取提供者配置
-   */
   getConfig() {
     return {
       endpoint: this.apiConfigItem?.config.apiEndpoint,
-      rateLimitPerMinute: 20, // AI API通常有较低的频率限制
+      rateLimitPerMinute: 20,
       supportsBatch: false,
       supportsAudio: false,
-      supportsMeaning: true, // 主要功能
+      supportsMeaning: true,
     };
   }
 
-  /**
-   * 更新API配置和超时时间
-   */
   updateApiConfig(apiConfigItem: ApiConfigItem | null, timeout?: number): void {
     const previousKey = this.getCacheScopeKey();
     this.apiConfigItem = apiConfigItem;
@@ -208,48 +209,30 @@ export class AITranslationProvider {
       : 'none';
   }
 
-  /**
-   * 解析AI响应内容
-   */
   private parseAIResponse(content: string, word: string): AITranslationEntry {
-    try {
-      let explain = content?.trim() || '';
+    let explain = content?.trim() || '';
 
-      // 清理和验证解释文本
-      if (!explain || typeof explain !== 'string') {
-        explain = `${word} 的释义暂不可用`;
-      } else {
-        // 清理Markdown格式和文本格式
-        explain = cleanMarkdownFromResponse(explain);
-        // 如果解释过长，截取前200个字符
-        if (explain.length > 200) {
-          explain = explain.substring(0, 200) + '...';
-        }
+    if (!explain) {
+      explain = `No definition available for "${word}"`;
+    } else {
+      explain = cleanMarkdownFromResponse(explain);
+      if (explain.length > 400) {
+        explain = explain.substring(0, 400) + '...';
       }
-
-      return {
-        explain: explain,
-        source: 'ai-translation',
-      };
-    } catch (error) {
-      console.error('解析AI翻译响应失败:', error);
-      return {
-        explain: `${word} 的释义暂不可用`,
-        source: 'ai-translation',
-      };
     }
+
+    return {
+      explain,
+      source: 'ai-translation',
+    };
   }
 
-  /**
-   * 从缓存获取数据
-   */
   private getFromCache(word: string): AITranslationEntry | null {
     const entry = this.cache.get(word);
     if (entry && Date.now() - entry.timestamp < entry.ttl) {
       return entry.data;
     }
 
-    // 清理过期缓存
     if (entry) {
       this.cache.delete(word);
     }
@@ -257,9 +240,6 @@ export class AITranslationProvider {
     return null;
   }
 
-  /**
-   * 存储数据到缓存
-   */
   private setCache(word: string, data: AITranslationEntry): void {
     this.cache.set(word, {
       data,
@@ -267,7 +247,6 @@ export class AITranslationProvider {
       ttl: this.cacheTTL,
     });
 
-    // 简单的缓存大小控制
     if (this.cache.size > 500) {
       const oldestKey = this.cache.keys().next().value;
       if (oldestKey) {

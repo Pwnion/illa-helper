@@ -91,7 +91,12 @@
                     :key="lang.code"
                     :value="lang.code"
                   >
-                    {{ lang.name }} - {{ lang.nativeName }}
+                    {{ lang.name
+                    }}{{
+                      lang.nativeName !== lang.name
+                        ? ` - ${lang.nativeName}`
+                        : ''
+                    }}
                   </SelectItem>
 
                   <!-- 分隔线 -->
@@ -108,7 +113,12 @@
                     :key="lang.code"
                     :value="lang.code"
                   >
-                    {{ lang.name }} - {{ lang.nativeName }}
+                    {{ lang.name
+                    }}{{
+                      lang.nativeName !== lang.name
+                        ? ` - ${lang.nativeName}`
+                        : ''
+                    }}
                   </SelectItem>
                 </SelectContent>
               </Select>

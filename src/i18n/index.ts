@@ -1,45 +1,26 @@
 import { createI18n } from 'vue-i18n';
 import type { Locale } from 'vue-i18n';
 
-// 导入语言包
-import zhCN from './locales/zh-CN.json';
+// Locale bundles. Strings missing from a bundle fall back to en-US.
 import enUS from './locales/en-US.json';
-import jaJP from './locales/ja-JP.json';
 import koKR from './locales/ko-KR.json';
 import esES from './locales/es-ES.json';
 
-// 支持的语言列表
-export const SUPPORTED_LOCALES: Locale[] = [
-  'zh-CN',
-  'en-US',
-  'ja-JP',
-  'ko-KR',
-  'es-ES',
-];
+export const SUPPORTED_LOCALES: Locale[] = ['en-US', 'ko-KR', 'es-ES'];
 
-// 语言显示名称
 export const LOCALE_NAMES: Record<Locale, string> = {
-  'zh-CN': '中文',
   'en-US': 'English',
-  'ja-JP': '日本語',
   'ko-KR': '한국어',
   'es-ES': 'Español',
 };
 
-// 默认语言
 const DEFAULT_LOCALE: Locale = 'en-US';
 
-// 浏览器语言到支持语言的映射
+// Maps browser language tags to a supported UI locale
 const BROWSER_LANGUAGE_MAP: Record<string, Locale> = {
-  zh: 'zh-CN',
-  'zh-CN': 'zh-CN',
-  'zh-TW': 'zh-CN',
-  'zh-HK': 'zh-CN',
   en: 'en-US',
   'en-US': 'en-US',
   'en-GB': 'en-US',
-  ja: 'ja-JP',
-  'ja-JP': 'ja-JP',
   ko: 'ko-KR',
   'ko-KR': 'ko-KR',
   es: 'es-ES',
@@ -92,9 +73,7 @@ export const i18n = createI18n({
   locale: DEFAULT_LOCALE,
   fallbackLocale: 'en-US',
   messages: {
-    'zh-CN': zhCN,
     'en-US': enUS,
-    'ja-JP': jaJP,
     'ko-KR': koKR,
     'es-ES': esES,
   },

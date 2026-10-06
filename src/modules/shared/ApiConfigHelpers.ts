@@ -1,11 +1,6 @@
 import { ApiConfig, ApiConfigItem, ApiProtocolFamily } from './types/api';
 
-export type ApiPresetKey =
-  | 'openai'
-  | 'deepseek'
-  | 'silicon-flow'
-  | 'gemini'
-  | 'custom-openai';
+export type ApiPresetKey = 'openai' | 'anthropic' | 'gemini' | 'custom-openai';
 
 export interface ApiPresetDefinition {
   key: ApiPresetKey;
@@ -23,19 +18,14 @@ export const API_PRESETS: Record<ApiPresetKey, ApiPresetDefinition> = {
     apiEndpoint: 'https://api.openai.com/v1/chat/completions',
     defaultModel: 'gpt-4o-mini',
   },
-  deepseek: {
-    key: 'deepseek',
-    label: 'DeepSeek',
+  // Claude through Anthropic's OpenAI SDK compatibility layer. The request
+  // shape matches the documented compatibility API but is untested here.
+  anthropic: {
+    key: 'anthropic',
+    label: 'Anthropic (Claude)',
     protocolFamily: ApiProtocolFamily.OPENAI_COMPATIBLE,
-    apiEndpoint: 'https://api.deepseek.com/v1/chat/completions',
-    defaultModel: 'deepseek-chat',
-  },
-  'silicon-flow': {
-    key: 'silicon-flow',
-    label: 'Silicon Flow',
-    protocolFamily: ApiProtocolFamily.OPENAI_COMPATIBLE,
-    apiEndpoint: 'https://api.siliconflow.cn/v1/chat/completions',
-    defaultModel: 'qwen/Qwen2.5-7B-Instruct',
+    apiEndpoint: 'https://api.anthropic.com/v1/chat/completions',
+    defaultModel: 'claude-haiku-4-5-20251001',
   },
   gemini: {
     key: 'gemini',

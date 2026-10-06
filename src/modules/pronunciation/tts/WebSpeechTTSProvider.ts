@@ -1,6 +1,6 @@
 /**
- * Web Speech API TTS提供者
- * 封装浏览器原生的语音合成功能
+ * Web Speech API TTS provider.
+ * Wraps the browser's built-in speech synthesis.
  */
 
 import { ITTSProvider, TTSProviderConfig } from './ITTSProvider';
@@ -27,20 +27,13 @@ export class WebSpeechTTSProvider implements ITTSProvider {
     this.initialize();
   }
 
-  /**
-   * 初始化TTS服务
-   */
   private async initialize(): Promise<void> {
     if (this.isInitialized) return;
 
-    // 等待语音列表加载
     await this.loadVoices();
     this.isInitialized = true;
   }
 
-  /**
-   * 加载可用的语音
-   */
   private loadVoices(): Promise<void> {
     return new Promise((resolve) => {
       const loadVoicesHandler = () => {
@@ -50,12 +43,11 @@ export class WebSpeechTTSProvider implements ITTSProvider {
         }
       };
 
-      // 有些浏览器需要异步加载语音
+      // Some browsers populate the voice list asynchronously
       if (this.synthesis.getVoices().length > 0) {
         loadVoicesHandler();
       } else {
         this.synthesis.onvoiceschanged = loadVoicesHandler;
-        // 设置超时防止无限等待
         setTimeout(() => {
           if (this.voices.length === 0) {
             this.voices = this.synthesis.getVoices();
@@ -74,31 +66,25 @@ export class WebSpeechTTSProvider implements ITTSProvider {
       if (!text || typeof text !== 'string') {
         return {
           success: false,
-          error: '文本参数无效',
+          error: 'Invalid text',
         };
       }
 
-      // 确保已初始化
       await this.initialize();
 
-      // 停止当前朗读
       this.stop();
 
       const finalConfig = { ...this.config, ...config };
+      const lang = finalConfig.lang || 'en-US';
       const utterance = new SpeechSynthesisUtterance(text);
       this.currentUtterance = utterance;
 
-      // 设置语音参数
-      utterance.lang = finalConfig.lang || 'en-US';
+      utterance.lang = lang;
       utterance.rate = finalConfig.rate || 1.0;
       utterance.pitch = finalConfig.pitch || 1.0;
       utterance.volume = finalConfig.volume || 1.0;
 
-      // 选择合适的语音
-      const voice = this.selectVoice(
-        finalConfig.lang || 'en-US',
-        finalConfig.voice,
-      );
+      const voice = this.selectVoice(lang, finalConfig.voice);
       if (voice) {
         utterance.voice = voice;
       }
@@ -113,7 +99,7 @@ export class WebSpeechTTSProvider implements ITTSProvider {
           this.currentUtterance = null;
           resolve({
             success: false,
-            error: `朗读失败: ${event.error}`,
+            error: `Speech failed: ${event.error}`,
           });
         };
 
@@ -123,7 +109,7 @@ export class WebSpeechTTSProvider implements ITTSProvider {
       this.currentUtterance = null;
       return {
         success: false,
-        error: error instanceof Error ? error.message : '未知错误',
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
@@ -151,24 +137,24 @@ export class WebSpeechTTSProvider implements ITTSProvider {
     return { ...this.config };
   }
 
-  /**
-   * 获取可用的语音列表
-   */
   getVoices(): SpeechSynthesisVoice[] {
     return this.voices;
   }
 
   /**
-   * 获取指定语言的语音
+   * Voices whose language starts with the given tag. Some platforms report
+   * "sv_SE" instead of "sv-SE", so separators are normalised first.
    */
   getVoicesByLanguage(lang: string): SpeechSynthesisVoice[] {
+    const wanted = normalizeLangTag(lang);
     return this.voices.filter((voice) =>
-      voice.lang.toLowerCase().startsWith(lang.toLowerCase()),
+      normalizeLangTag(voice.lang).startsWith(wanted),
     );
   }
 
   /**
-   * 选择合适的语音
+   * Prefers an explicitly named voice, then an exact locale match, then any
+   * voice for the base language. Local voices win over network voices.
    */
   private selectVoice(
     lang: string,
@@ -176,23 +162,23 @@ export class WebSpeechTTSProvider implements ITTSProvider {
   ): SpeechSynthesisVoice | null {
     if (this.voices.length === 0) return null;
 
-    // 如果指定了特定语音，尝试找到它
     if (preferredVoice) {
       const voice = this.voices.find((v) => v.name === preferredVoice);
       if (voice) return voice;
     }
 
-    // 寻找匹配语言的语音
-    const languageVoices = this.getVoicesByLanguage(lang);
-    if (languageVoices.length > 0) {
-      // 优先选择本地语音
-      const localVoice = languageVoices.find((v) => v.localService);
-      if (localVoice) return localVoice;
+    const exact = this.getVoicesByLanguage(lang).filter(
+      (v) => normalizeLangTag(v.lang) === normalizeLangTag(lang),
+    );
+    const baseLanguage = normalizeLangTag(lang).split('-')[0];
+    const candidates =
+      exact.length > 0 ? exact : this.getVoicesByLanguage(baseLanguage);
 
-      // 否则返回第一个匹配的语音
-      return languageVoices[0];
-    }
-
-    return null;
+    if (candidates.length === 0) return null;
+    return candidates.find((v) => v.localService) || candidates[0];
   }
+}
+
+function normalizeLangTag(tag: string): string {
+  return tag.replace('_', '-').toLowerCase();
 }

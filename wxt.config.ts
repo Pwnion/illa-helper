@@ -6,7 +6,7 @@ import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite';
 
-// 从 package.json 读取版本号
+// The manifest version comes from package.json
 const packageJson = JSON.parse(
   readFileSync(resolve('./package.json'), 'utf-8'),
 );
@@ -16,11 +16,8 @@ const version = packageJson.version;
 export default defineConfig({
   modules: ['@wxt-dev/module-vue'],
   manifest: {
-    name: '浸入式学语言助手(illa-helper)',
-    author: {
-      email: 'xiao1932794922@gmail.com',
-    },
-    description: `浸入式学语言助手(illa-helper) extension turns browsing into language learning. AI uses "i+1" theory, supports 20+ languages.`,
+    name: 'ILLA Helper (sentence mode)',
+    description: `Learn a language while you browse: an LLM swaps words, or whole sentences at your level, into the language you're learning.`,
     version,
     permissions: [
       'storage',
@@ -36,7 +33,7 @@ export default defineConfig({
           default: 'Alt+Z',
           mac: 'Command+Z',
         },
-        description: '一键翻译',
+        description: 'Translate page',
       },
     },
   },
@@ -49,20 +46,15 @@ export default defineConfig({
     plugins: [
       tailwindcss(),
       VueI18nPlugin({
-        // 自动加载语言包文件
         include: [
           resolve(
             dirname(fileURLToPath(import.meta.url)),
             './src/i18n/locales/**',
           ),
         ],
-        // 支持 JSON 和 YAML 格式
         forceStringify: true,
-        // 启用运行时优化
         runtimeOnly: false,
-        // 自动生成类型定义
         compositionOnly: true,
-        // 支持嵌套结构
         fullInstall: true,
       }),
       configEnv.mode === 'production'

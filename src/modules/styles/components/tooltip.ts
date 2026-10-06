@@ -223,6 +223,7 @@ export const TOOLTIP_STYLES = `
   font-size: 13px;
   color: #d1d1d6;
   line-height: 1.55;
+  white-space: pre-line;
   padding: 0;
   margin: 0;
   font-style: normal;

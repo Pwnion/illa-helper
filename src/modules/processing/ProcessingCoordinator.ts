@@ -619,13 +619,13 @@ export class ProcessingCoordinator {
       for (const element of allTranslationElements) {
         const translationText = element.textContent;
         if (translationText) {
-          // 提取纯英文内容（去除括号）
+          // Strip the parentheses added around inline translations
           const cleanText = translationText.replace(/[()]/g, '').trim();
 
-          // 检查是否为英文文本（支持常见标点符号和数字）
+          // Any script is fine; skip only symbols-only or empty strings
           if (
-            /^[a-zA-Z0-9\s\-',.!?;:()%]+$/.test(cleanText) &&
-            cleanText.length > 0
+            /^[\p{L}\p{M}\p{N}\s\-'’,.!?;:()%]+$/u.test(cleanText) &&
+            /\p{L}/u.test(cleanText)
           ) {
             await this.pronunciationService.addPronunciationToElement(
               element as HTMLElement,

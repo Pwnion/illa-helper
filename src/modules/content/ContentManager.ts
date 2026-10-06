@@ -343,6 +343,11 @@ export class ContentManager implements IContentManager {
     const textProcessor = TextProcessorService.getInstance({
       enablePronunciationTooltip: this.settings.enablePronunciationTooltip,
       apiConfigItem: activeConfig ?? null,
+      nativeLanguage: this.settings.multilingualConfig.nativeLanguage,
+      targetLanguage: languageService.resolveTargetLanguage(
+        this.settings.multilingualConfig,
+        this.detectedPageLanguage,
+      ),
     });
 
     const textReplacer = TextReplacerService.getInstance(

@@ -22,8 +22,9 @@ import { Language } from './types';
 const LANGUAGE_DEFINITIONS: { [key: string]: Language } = {
   // 常用语言 (优先级高) - 世界主要语言
   en: { code: 'en', name: 'English', nativeName: 'English', isPopular: true },
-  zh: { code: 'zh', name: 'Chinese', nativeName: '中文', isPopular: true },
-  ja: { code: 'ja', name: 'Japanese', nativeName: '日本語', isPopular: true },
+  // Names for Han-script languages are given in English only
+  zh: { code: 'zh', name: 'Chinese', nativeName: 'Chinese', isPopular: true },
+  ja: { code: 'ja', name: 'Japanese', nativeName: 'Japanese', isPopular: true },
   ko: { code: 'ko', name: 'Korean', nativeName: '한국어', isPopular: true },
   fr: { code: 'fr', name: 'French', nativeName: 'Français', isPopular: true },
   de: { code: 'de', name: 'German', nativeName: 'Deutsch', isPopular: true },
@@ -44,7 +45,7 @@ const LANGUAGE_DEFINITIONS: { [key: string]: Language } = {
   no: { code: 'no', name: 'Norwegian', nativeName: 'Norsk' },
   da: { code: 'da', name: 'Danish', nativeName: 'Dansk' },
   fi: { code: 'fi', name: 'Finnish', nativeName: 'Suomi' },
-  sv: { code: 'sv', name: 'Swedish', nativeName: 'Svenska' },
+  sv: { code: 'sv', name: 'Swedish', nativeName: 'Svenska', isPopular: true },
   pl: { code: 'pl', name: 'Polish', nativeName: 'Polski' },
   el: { code: 'el', name: 'Greek', nativeName: 'Ελληνικά' },
   he: { code: 'he', name: 'Hebrew', nativeName: 'עברית' },
@@ -226,19 +227,19 @@ export class LanguageService {
     try {
       const textSample = document.body.innerText.substring(0, 1000);
       if (!textSample.trim()) {
-        return 'zh';
+        return 'en';
       }
 
       const result = await browser.i18n.detectLanguage(textSample);
       const detectedLang = result?.languages?.[0]?.language;
       if (!detectedLang) {
-        return 'zh';
+        return 'en';
       }
 
       return this.normalizeLanguageCode(detectedLang);
     } catch (error) {
-      console.warn('[LanguageService] 页面语言检测失败:', error);
-      return 'zh';
+      console.warn('[LanguageService] Page language detection failed:', error);
+      return 'en';
     }
   }
 
@@ -284,11 +285,9 @@ export class LanguageService {
       this._popularLanguagesCache = Object.values(LANGUAGE_DEFINITIONS)
         .filter((lang) => lang.isPopular)
         .sort((a, b) => {
-          // 英文第一，中文第二，其他按字母排序
+          // English first, then alphabetical
           if (a.code === 'en') return -1;
           if (b.code === 'en') return 1;
-          if (a.code === 'zh') return -1;
-          if (b.code === 'zh') return 1;
           return a.name.localeCompare(b.name);
         });
     }
@@ -338,9 +337,10 @@ export class LanguageService {
    */
   public getTargetLanguageDisplayName(languageCode: string): string {
     const language = this.getLanguage(languageCode);
-    return language
-      ? `${language.nativeName} (${language.name})`
-      : languageCode.toUpperCase();
+    if (!language) return languageCode.toUpperCase();
+    return language.nativeName === language.name
+      ? language.name
+      : `${language.nativeName} (${language.name})`;
   }
 
   // ==================== 工具方法 ====================

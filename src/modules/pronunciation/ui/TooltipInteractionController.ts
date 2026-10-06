@@ -32,7 +32,6 @@ export interface TooltipInteractionControllerOptions {
   renderer: TooltipRenderer;
   storageService: StorageService;
   speakText: (text: string) => Promise<unknown>;
-  speakTextWithAccent: (text: string, lang: string) => Promise<unknown>;
 }
 
 export class TooltipInteractionController {
@@ -78,7 +77,8 @@ export class TooltipInteractionController {
       this.elementDataMap.set(element, elementData);
       element.classList.add(CSS_CLASSES.PRONUNCIATION_ENABLED);
 
-      if (this.options.getConfig().uiConfig.inlineDisplay) {
+      const { uiConfig } = this.options.getConfig();
+      if (uiConfig.inlineDisplay && uiConfig.showPhonetic) {
         await this.preloadPhonetic(elementData);
       }
 
@@ -256,7 +256,8 @@ export class TooltipInteractionController {
       return;
     }
 
-    const needPhonetic = !elementData.phonetic;
+    const needPhonetic =
+      !elementData.phonetic && this.options.getConfig().uiConfig.showPhonetic;
     const needMeaning = !elementData.phonetic?.aiTranslation;
 
     if (!elementData.phonetic) {
@@ -459,7 +460,9 @@ export class TooltipInteractionController {
         wordTooltip.style.opacity = '1';
       });
 
-      void this.loadPhoneticForWordTooltip(wordTooltip, word);
+      if (this.options.getConfig().uiConfig.showPhonetic) {
+        void this.loadPhoneticForWordTooltip(wordTooltip, word);
+      }
       void this.loadMeaningForWordTooltip(wordTooltip, word);
     } catch (error) {
       console.error('显示单词悬浮框失败:', error);
@@ -475,15 +478,7 @@ export class TooltipInteractionController {
       audioBtn.addEventListener('click', (event) => {
         event.preventDefault();
         event.stopPropagation();
-
-        const accent = audioBtn.getAttribute('data-accent');
-        if (accent === 'uk') {
-          void this.options.speakTextWithAccent(word, 'en-GB');
-        } else if (accent === 'us') {
-          void this.options.speakTextWithAccent(word, 'en-US');
-        } else {
-          void this.options.speakText(word);
-        }
+        void this.options.speakText(word);
       });
     });
 

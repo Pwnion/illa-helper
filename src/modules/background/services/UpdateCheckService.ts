@@ -46,7 +46,7 @@ export class UpdateCheckService {
   private readonly currentVersion: string;
   private readonly checkInterval: number = 24 * 60 * 60 * 1000; // 24小时检查一次
   private readonly githubApiUrl =
-    'https://api.github.com/repos/xiao-zaiyi/illa-helper/releases/latest';
+    'https://api.github.com/repos/Pwnion/illa-helper/releases/latest';
   private storageService: StorageService;
   private intervalId?: number;
 
