@@ -814,6 +814,7 @@ const createConfigFormState = () => ({
     ...createEmptyApiConfig(),
     apiEndpoint: API_PRESETS.openai.apiEndpoint,
     model: API_PRESETS.openai.defaultModel,
+    customParams: API_PRESETS.openai.defaultCustomParams ?? '',
   },
 });
 
@@ -952,6 +953,16 @@ const handlePresetChange = (presetKey: unknown) => {
   const preset = API_PRESETS[presetKey as ApiPresetKey];
   if (!preset) {
     return;
+  }
+
+  // Replace custom parameters only if they are empty or still the previous
+  // preset's defaults, so hand-written parameters survive a preset switch
+  const previousDefaults =
+    API_PRESETS[configForm.value.presetKey as ApiPresetKey]
+      ?.defaultCustomParams ?? '';
+  const currentParams = configForm.value.config.customParams ?? '';
+  if (!currentParams.trim() || currentParams === previousDefaults) {
+    configForm.value.config.customParams = preset.defaultCustomParams ?? '';
   }
 
   configForm.value.presetKey = preset.key;

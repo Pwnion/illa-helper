@@ -12,7 +12,7 @@ import type {
 import type { FloatingBallConfig, TooltipHotkey } from '../types/ui';
 import type { UserSettings } from '../types/storage';
 import type { LazyLoadingConfig } from '../types/core';
-import { createEmptyApiConfig } from '../ApiConfigHelpers';
+import { API_PRESETS, createEmptyApiConfig } from '../ApiConfigHelpers';
 import { DEFAULT_SENTENCE_MODE_CONFIG } from '../../sentence/config';
 import {
   UserLevel,
@@ -30,7 +30,11 @@ export const DEFAULT_API_CONFIG: ApiConfig = {
   apiEndpoint:
     import.meta.env.VITE_WXT_DEFAULT_API_ENDPOINT ||
     'https://api.openai.com/v1/chat/completions',
-  model: import.meta.env.VITE_WXT_DEFAULT_MODEL || 'gpt-4o-mini',
+  model:
+    import.meta.env.VITE_WXT_DEFAULT_MODEL || API_PRESETS.openai.defaultModel,
+  customParams: import.meta.env.VITE_WXT_DEFAULT_MODEL
+    ? ''
+    : API_PRESETS.openai.defaultCustomParams || '',
   temperature: parseFloat(import.meta.env.VITE_WXT_DEFAULT_TEMPERATURE) || 0,
 };
 

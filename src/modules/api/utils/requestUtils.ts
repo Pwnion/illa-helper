@@ -4,6 +4,7 @@
 
 import { ApiConfig } from '../../shared/types/api';
 import { BackgroundProxyResponse } from '../types';
+import { adaptForOpenAIReasoningModel } from './openaiReasoning';
 
 /**
  * Sends an API request.
@@ -36,7 +37,9 @@ async function sendViaBackground(
             'Content-Type': 'application/json',
             Authorization: `Bearer ${apiConfig.apiKey}`,
           },
-          body: JSON.stringify(requestBody),
+          body: JSON.stringify(
+            adaptForOpenAIReasoningModel(requestBody, apiConfig.apiEndpoint),
+          ),
           timeout: timeout,
         },
       },

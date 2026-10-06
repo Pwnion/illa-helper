@@ -8,6 +8,8 @@ export interface ApiPresetDefinition {
   protocolFamily: ApiProtocolFamily;
   apiEndpoint: string;
   defaultModel: string;
+  /** Custom parameters JSON filled in with the preset */
+  defaultCustomParams?: string;
 }
 
 export const API_PRESETS: Record<ApiPresetKey, ApiPresetDefinition> = {
@@ -16,7 +18,10 @@ export const API_PRESETS: Record<ApiPresetKey, ApiPresetDefinition> = {
     label: 'OpenAI',
     protocolFamily: ApiProtocolFamily.OPENAI_COMPATIBLE,
     apiEndpoint: 'https://api.openai.com/v1/chat/completions',
-    defaultModel: 'gpt-4o-mini',
+    defaultModel: 'gpt-6-luna',
+    // Luna defaults to medium reasoning, which is slow and costly for
+    // translation. Use "low" if translations read stiffly.
+    defaultCustomParams: '{"reasoning_effort": "none"}',
   },
   // Claude through Anthropic's OpenAI SDK compatibility layer. The request
   // shape matches the documented compatibility API but is untested here.

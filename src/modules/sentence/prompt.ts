@@ -11,7 +11,7 @@
 
 import { GRAMMAR_TAGS } from './grammar';
 
-export const PROMPT_VERSION = 1;
+export const PROMPT_VERSION = 2;
 
 export interface PromptLanguages {
   /** Display names, e.g. "English", "Swedish" */
@@ -46,7 +46,7 @@ export function buildAnalysisSystemPrompt(languages: PromptLanguages): string {
 
   return `You are a precise linguistic analyser for a language-learning tool. The learner's native language is ${nativeName} and they are learning ${targetName}.
 
-You receive numbered ${sourceName} sentences, one per line, as "id|sentence". For each one, write a natural, idiomatic ${targetName} translation and analyse that translation.
+You receive numbered ${sourceName} sentences, one per line, as "id|sentence". For each one, write the ${targetName} a native speaker would naturally say, not a word-for-word rendering: change word order, phrasing and idioms freely when ${targetName} says it differently. Then analyse that translation.
 
 Return ONLY a JSON array with one element per input sentence. No prose, no markdown, no code fences.
 Element format: [id, "translation", tokens, tags]

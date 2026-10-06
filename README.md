@@ -65,7 +65,8 @@ Grammar notes cost one small extra request per word, and only when you ask for t
    - **Firefox (or Firefox-based browsers like Zen):** `npm run build:firefox`, open `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on…**, and choose `.output/firefox-mv2/manifest.json`. Temporary add-ons are removed when the browser quits, and their stored data may go with them. To install permanently, sign it as an unlisted (self-distributed) add-on with your addons.mozilla.org API key: `npx web-ext sign -s .output/firefox-mv2 --channel=unlisted --api-key=… --api-secret=…`, then open the signed `.xpi`.
 2. The shortcut to translate the page is Alt+Z, or Control+Shift+Z on macOS.
 3. Open the extension's options. Under **Translation Service**, add an API configuration:
-   - **OpenAI**, or any OpenAI-compatible endpoint (for example OpenRouter, or a local Ollama server at `http://localhost:11434/v1/chat/completions`).
+   - **OpenAI** (recommended). The preset uses `gpt-6-luna` with custom parameters `{"reasoning_effort": "none"}`: Luna otherwise reasons at medium effort, which is slow and costs far more. Try `"low"` if translations read stiffly. For OpenAI's reasoning models the extension sends `max_completion_tokens` instead of `max_tokens`, leaves out `temperature`, and allows extra output tokens for reasoning.
+   - Any other OpenAI-compatible endpoint (for example OpenRouter, or a local Ollama server at `http://localhost:11434/v1/chat/completions`).
    - **Anthropic (Claude)** through its OpenAI-compatible endpoint, defaulting to `claude-haiku-4-5-20251001`. This preset matches Anthropic's documented compatibility API but has not been tested here.
    - **Google Gemini**.
 4. Under **Basic Settings**, choose **Sentence Translation Mode**.

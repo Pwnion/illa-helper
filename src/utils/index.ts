@@ -10,6 +10,7 @@ import {
   ApiConfigItem,
   ApiProtocolFamily,
 } from '../modules/shared/types';
+import { adaptForOpenAIReasoningModel } from '../modules/api/utils/openaiReasoning';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 /**
@@ -264,7 +265,9 @@ function sendOpenAICompatibleTestRequest(
             'Content-Type': 'application/json',
             Authorization: `Bearer ${apiConfig.apiKey}`,
           },
-          body: JSON.stringify(requestBody),
+          body: JSON.stringify(
+            adaptForOpenAIReasoningModel(requestBody, apiConfig.apiEndpoint),
+          ),
           timeout,
         },
       },
